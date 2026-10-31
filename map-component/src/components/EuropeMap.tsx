@@ -1,4 +1,4 @@
-import React, { useEffect, useRef, useState } from 'react';
+import React, { useEffect, useRef, useState, useImperativeHandle } from 'react';
 import {
   Map,
   NavigationControl,
@@ -16,6 +16,11 @@ import workerUrl from 'maplibre-gl/dist/maplibre-gl-worker.mjs?worker&url';
 import LoadingSpinner from './LoadingSpinner';
 
 setWorkerUrl(workerUrl);
+
+export interface EuropeMapRefHandle {
+  marker?: Marker | null;
+  clearMarker: () => void;
+}
 
 type ClickEventData = {
   country?: string;
@@ -39,7 +44,9 @@ type MapProps = {
   onClick?: (data: ClickEventData) => void;
 };
 
-type Props = MapProps & Omit<React.ComponentProps<'div'>, keyof MapProps>;
+type Props = MapProps & Omit<React.ComponentProps<'div'>, keyof MapProps | 'ref'> & {
+  ref?: React.Ref<EuropeMapRefHandle>;
+};
 
 const updateSymbolVisibility = (map: Map, layer: LayerSpecification, display: MapProps['display']) => {
   if (layer.type !== 'symbol') {
@@ -102,17 +109,22 @@ const createMap = (container: HTMLDivElement, { display, boundaries = EUROPE_BOU
   return map;
 };
 
-const EuropeMap: React.FC<Props> = (props: Props) => {
+const EuropeMap: React.FC<Props> = ({ref, ...props}: Props) => {
+  const { display, geojson, boundaries, onClick, ...rest } = props;
+
   const [loading, setLoading] = useState<boolean>(true);
   const mapContainer = useRef<HTMLDivElement>(null);
   const mapInstance = useRef<Map>(null);
   const marker = useRef<Marker>(null);
+  const onClickRef = useRef(onClick);
 
-  const { display, geojson, boundaries, onClick, ...rest } = props;
+  useEffect(() => {
+    onClickRef.current = onClick;
+  }, [onClick]);
 
   useEffect(() => {
     if (mapContainer.current && !mapInstance.current) {
-      const instance = createMap(mapContainer.current, { display, geojson, boundaries, onClick });
+      const instance = createMap(mapContainer.current, { display, geojson, boundaries });
 
       instance.on('idle', () => setLoading(false));
       instance.on('click', (event) => {
@@ -130,7 +142,7 @@ const EuropeMap: React.FC<Props> = (props: Props) => {
         }
 
         marker.current = new Marker().setLngLat(event.lngLat).addTo(instance);
-        onClick?.({
+        onClickRef.current?.({
           point: event.point,
           city: clickedFeature.properties.city,
           country: clickedFeature.properties.country,
@@ -147,6 +159,11 @@ const EuropeMap: React.FC<Props> = (props: Props) => {
       }
     };
   }, []);
+
+  useImperativeHandle(ref, () => ({
+    clearMarker: () => marker.current?.remove(),
+    marker: marker.current
+  }), []);
 
   useEffect(() => {
     mapInstance.current?.getStyle()?.layers.forEach((layer) => {
