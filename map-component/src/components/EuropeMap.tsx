@@ -1,5 +1,13 @@
 import React, { useEffect, useRef, useState } from 'react';
-import { Map, NavigationControl, LngLatBounds, setWorkerUrl, Point } from 'maplibre-gl';
+import {
+  Map,
+  NavigationControl,
+  LngLatBounds,
+  setWorkerUrl,
+  Point,
+  type LayerSpecification,
+  Marker,
+} from 'maplibre-gl';
 import { EUROPE_BOUNDARIES } from './constants';
 
 import 'maplibre-gl/dist/maplibre-gl.css';
@@ -12,7 +20,7 @@ setWorkerUrl(workerUrl);
 type ClickEventData = {
   country?: string;
   city?: string;
-  position: Point;
+  point: Point;
 };
 
 type MapProps = {
@@ -33,10 +41,23 @@ type MapProps = {
 
 type Props = MapProps & Omit<React.ComponentProps<'div'>, keyof MapProps>;
 
-const createMap = (
-  container: HTMLDivElement,
-  { display, boundaries = EUROPE_BOUNDARIES, ...rest }: MapProps,
-): Promise<Map> => {
+const updateSymbolVisibility = (map: Map, layer: LayerSpecification, display: MapProps['display']) => {
+  if (layer.type !== 'symbol') {
+    return;
+  }
+
+  for (const layerType of ['city', 'country', 'village', 'water', 'state']) {
+    if (layer.id.includes(layerType)) {
+      map.setLayoutProperty(
+        layer.id,
+        'visibility',
+        display?.[layerType as keyof MapProps['display']] ? 'visible' : 'none',
+      );
+    }
+  }
+};
+
+const createMap = (container: HTMLDivElement, { display, boundaries = EUROPE_BOUNDARIES, ...rest }: MapProps): Map => {
   const map = new Map({
     container: container,
     style: 'https://tiles.openfreemap.org/styles/liberty',
@@ -51,71 +72,72 @@ const createMap = (
     map.addControl(new NavigationControl(), 'top-right');
   }
 
-  return new Promise<Map>((resolve) => {
-    map.once('load', () => {
-      map.getStyle().layers.forEach((layer) => {
-        if (layer.type === 'symbol') {
-          const isCityLayer = layer.id.includes('city');
-          const isCountryLayer = layer.id.includes('country');
+  map.once('load', () => {
+    map.getStyle().layers.forEach((layer) => {
+      if (layer.type === 'symbol') {
+        const isCityLayer = layer.id.includes('city');
+        const isCountryLayer = layer.id.includes('country');
 
-          if (isCityLayer || isCountryLayer) {
-            map.setLayoutProperty(layer.id, 'text-font', ['Open Sans Regular', 'Arial Unicode MS Regular']);
-          }
-
-          if (
-            (isCityLayer && !display?.city) ||
-            (isCountryLayer && !display?.country) ||
-            (layer.id.includes('village') && !display?.village) ||
-            (layer.id.includes('water') && !display?.water) ||
-            (layer.id.includes('state') && !display?.state)
-          ) {
-            map.setLayoutProperty(layer.id, 'visibility', 'none');
-          }
+        if (isCityLayer || isCountryLayer) {
+          map.setLayoutProperty(layer.id, 'text-font', ['Open Sans Regular', 'Arial Unicode MS Regular']);
         }
-      });
+      }
 
-      map.addSource('data', {
-        type: 'geojson',
-        data: rest.geojson,
-      });
-
-      map.addLayer({
-        id: 'data-layer',
-        type: 'fill',
-        source: 'data',
-        paint: { 'fill-color': '#000000', 'fill-opacity': 0 },
-      });
-
-      map.on('click', (e) => {
-        const features = map.queryRenderedFeatures(e.point);
-        console.log(features);
-
-        const clickedFeature = features.find((f) => f.layer.id === 'data-layer');
-        if (clickedFeature) {
-          rest.onClick?.({ position: e.point, ...clickedFeature.properties });
-        }
-      });
+      updateSymbolVisibility(map, layer, display);
     });
 
-    map.on('idle', () => {
-      resolve(map);
+    map.addSource('data', {
+      type: 'geojson',
+      data: rest.geojson,
+    });
+
+    map.addLayer({
+      id: 'data-layer',
+      type: 'fill',
+      source: 'data',
+      paint: { 'fill-color': '#000000', 'fill-opacity': 0 },
     });
   });
+
+  return map;
 };
 
 const EuropeMap: React.FC<Props> = (props: Props) => {
   const [loading, setLoading] = useState<boolean>(true);
   const mapContainer = useRef<HTMLDivElement>(null);
   const mapInstance = useRef<Map>(null);
+  const marker = useRef<Marker>(null);
 
   const { display, geojson, boundaries, onClick, ...rest } = props;
 
   useEffect(() => {
-    if (mapContainer.current) {
-      createMap(mapContainer.current, props).then((instance) => {
-        mapInstance.current = instance;
-        setLoading(false);
+    if (mapContainer.current && !mapInstance.current) {
+      const instance = createMap(mapContainer.current, { display, geojson, boundaries, onClick });
+
+      instance.on('idle', () => setLoading(false));
+      instance.on('click', (event) => {
+        const features = instance.queryRenderedFeatures(event.point);
+        const relevantFeatures = features.filter((feature) => feature.layer.id === 'data-layer');
+        const clickedFeature =
+          relevantFeatures.find((feature) => 'city' in feature.properties && 'country' in feature.properties) ??
+          relevantFeatures.find((feature) => 'city' in feature.properties || 'country' in feature.properties);
+        if (!clickedFeature) {
+          return;
+        }
+
+        if (marker.current) {
+          marker.current.remove();
+        }
+
+        marker.current = new Marker().setLngLat(event.lngLat).addTo(instance);
+        onClick?.({
+          point: event.point,
+          city: clickedFeature.properties.city,
+          country: clickedFeature.properties.country,
+        });
       });
+
+      mapInstance.current = instance;
     }
 
     return () => {
@@ -125,6 +147,12 @@ const EuropeMap: React.FC<Props> = (props: Props) => {
       }
     };
   }, []);
+
+  useEffect(() => {
+    mapInstance.current?.getStyle()?.layers.forEach((layer) => {
+      updateSymbolVisibility(mapInstance.current!, layer, display);
+    });
+  }, [display, loading]);
 
   return (
     <div>
