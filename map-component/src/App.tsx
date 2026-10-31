@@ -1,6 +1,6 @@
 import './App.css';
-import { EUROPE_BOUNDARIES } from './constants';
-import EuropeMap from './EuropeMap';
+import { EUROPE_BOUNDARIES } from './components/constants';
+import EuropeMap from './components/EuropeMap';
 import geojson from './europe.geo.json';
 
 const App = () => {
@@ -9,7 +9,7 @@ const App = () => {
       <EuropeMap
         boundaries={EUROPE_BOUNDARIES}
         geojson={geojson}
-        displayCityName={false}
+        display={{ country: true }}
         onClick={(data) => alert(JSON.stringify(data))}
         style={{ width: '100vw', height: '100vh' }}
       />
