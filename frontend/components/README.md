@@ -62,7 +62,8 @@ description, and `steps`; pass question and button labels to `QuestionPanel`; an
 a `ResultSummaryContent` object plus `pointsPerCorrectAnswer` to `ResultSummary`.
 Display content such as labels, question prompts, and player names accepts
 `React.ReactNode`, so it can include formatted elements as well as plain text.
-`GameButton` accepts optional visible label content.
+`GameButton` accepts optional label content. Set `hover` to reveal its label on hover
+or keyboard focus; without `hover`, the label remains visible.
 `CardsModal` can show an icon-only back button with a `backButton` object containing an
 `onClick` callback and accessible `label`.
 

@@ -1,4 +1,6 @@
 .card {
+  composes: focusRing from '../shared.module.css';
+
   display: flex;
   min-height: 13rem;
   flex-direction: column;
@@ -17,11 +19,6 @@
   transform: translateY(-4px);
   border-color: #9eb4f6;
   box-shadow: 0 0.75rem 2rem rgb(54 78 145 / 12%);
-}
-
-.card:focus-visible {
-  outline: 3px solid var(--color-focus);
-  outline-offset: 3px;
 }
 
 @media (max-width: 600px) {

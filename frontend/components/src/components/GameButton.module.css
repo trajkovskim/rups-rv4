@@ -1,4 +1,6 @@
 .button {
+  composes: focusRing from '../shared.module.css';
+
   position: relative;
   display: grid;
   width: 2.75rem;
@@ -18,11 +20,6 @@
 .button:hover {
   transform: translateY(-2px);
   background: var(--color-primary-hover);
-}
-
-.button:focus-visible {
-  outline: 3px solid var(--color-focus);
-  outline-offset: 3px;
 }
 
 .button svg {
@@ -73,8 +70,51 @@
   transform: none;
 }
 
+.hoverLabel {
+  display: flex;
+  align-items: center;
+  justify-content: flex-start;
+  width: max-content;
+  max-width: 2.75rem;
+  padding: 0.65rem 0.625rem;
+  overflow: hidden;
+  gap: 0.45rem;
+  white-space: nowrap;
+  border-radius: 50%;
+  transition:
+    max-width 180ms ease,
+    border-radius 180ms ease;
+}
+
+.hoverLabel > span {
+  display: none;
+  white-space: nowrap;
+}
+
+.hoverLabel svg {
+  position: static;
+  flex: 0 0 1.5rem;
+  transform: none;
+}
+
+.hoverLabel:hover,
+.hoverLabel:focus-visible {
+  max-width: 15rem;
+  border-radius: 20px;
+  transform: none;
+}
+
+.hoverLabel:hover > span,
+.hoverLabel:focus-visible > span {
+  display: inline;
+}
+
 @media (prefers-reduced-motion: reduce) {
   .button {
+    transition: none;
+  }
+
+  .hoverLabel {
     transition: none;
   }
 }

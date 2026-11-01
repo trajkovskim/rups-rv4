@@ -1,13 +1,12 @@
 .panel {
+  composes: floatingSurface from '../shared.module.css';
+
   display: flex;
   align-items: center;
   justify-content: center;
   gap: 1rem;
   width: 100%;
   padding: 1rem 1.25rem;
-  border: var(--border-glass);
-  border-radius: 1rem;
-  background: var(--color-surface);
   box-shadow: 0 0.75rem 2rem rgb(20 37 74 / 18%);
   text-align: center;
 }
@@ -33,11 +32,12 @@
 }
 
 .eyebrow {
-  color: var(--color-primary);
-  font-size: 0.68rem;
-  font-weight: 800;
-  letter-spacing: 0.1em;
-  text-transform: uppercase;
+  composes: eyebrow from '../shared.module.css';
+
+  --eyebrow-size: 0.68rem;
+  --eyebrow-weight: 800;
+  --eyebrow-spacing: 0.1em;
+  --eyebrow-transform: uppercase;
 }
 
 .question {

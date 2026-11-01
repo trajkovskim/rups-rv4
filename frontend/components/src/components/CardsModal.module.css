@@ -15,11 +15,13 @@
 }
 
 .eyebrow {
-  margin: 0 0 0.5rem;
-  color: #526bc0;
-  font-size: 0.7rem;
-  font-weight: 850;
-  letter-spacing: 0.14em;
+  composes: eyebrow from '../shared.module.css';
+
+  --eyebrow-margin: 0 0 0.5rem;
+  --eyebrow-color: #526bc0;
+  --eyebrow-size: 0.7rem;
+  --eyebrow-weight: 850;
+  --eyebrow-spacing: 0.14em;
 }
 
 .title {

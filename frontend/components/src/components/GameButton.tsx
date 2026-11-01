@@ -8,9 +8,10 @@ export type GameButtonProps = {
   onClick: () => void;
   disabled?: boolean;
   label?: ReactNode;
+  hover?: boolean;
 };
 
-const GameButton = ({ type, onClick, disabled = false, label }: GameButtonProps) => {
+const GameButton = ({ type, onClick, disabled = false, label, hover = false }: GameButtonProps) => {
   const hasLabel = label !== undefined;
 
   const icon = (
@@ -65,7 +66,13 @@ const GameButton = ({ type, onClick, disabled = false, label }: GameButtonProps)
   const variantClass = type === 'new-game' ? styles.newGame : styles[type];
   return (
     <button
-      className={`${styles.button} ${variantClass} ${hasLabel ? styles.withLabel : ''}`}
+      className={[
+        styles.button,
+        variantClass,
+        hasLabel && (hover ? styles.hoverLabel : styles.withLabel),
+      ]
+        .filter(Boolean)
+        .join(' ')}
       type="button"
       disabled={disabled}
       onClick={onClick}

@@ -1,0 +1,19 @@
+.eyebrow {
+  margin: var(--eyebrow-margin, 0);
+  color: var(--eyebrow-color, var(--color-primary));
+  font-size: var(--eyebrow-size, 0.68rem);
+  font-weight: var(--eyebrow-weight, 800);
+  letter-spacing: var(--eyebrow-spacing, 0.12em);
+  text-transform: var(--eyebrow-transform, none);
+}
+
+.focusRing:focus-visible {
+  outline: 3px solid var(--color-focus);
+  outline-offset: 3px;
+}
+
+.floatingSurface {
+  border: var(--border-glass);
+  border-radius: 1rem;
+  background: var(--color-surface);
+}

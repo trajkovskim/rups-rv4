@@ -13,12 +13,13 @@
 }
 
 .eyebrow {
-  margin: 0;
-  color: #606875;
-  font-size: 0.68rem;
-  font-weight: 850;
-  letter-spacing: 0.15em;
-  text-transform: uppercase;
+  composes: eyebrow from '../shared.module.css';
+
+  --eyebrow-color: #606875;
+  --eyebrow-size: 0.68rem;
+  --eyebrow-weight: 850;
+  --eyebrow-spacing: 0.15em;
+  --eyebrow-transform: uppercase;
 }
 
 .points {

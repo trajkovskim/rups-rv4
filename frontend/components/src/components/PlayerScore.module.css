@@ -1,12 +1,11 @@
 .score {
+  composes: floatingSurface from '../shared.module.css';
+
   display: grid;
   width: max-content;
   max-width: min(13rem, calc(100vw - 1.5rem));
   gap: 0.35rem;
   padding: 0.8rem 1rem;
-  border: var(--border-glass);
-  border-radius: 1rem;
-  background: var(--color-surface);
   box-shadow: var(--shadow-floating);
   color: var(--color-text-strong);
 }
