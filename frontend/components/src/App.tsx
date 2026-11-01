@@ -12,7 +12,11 @@ import EuropeMap, {
 import FloatingPanel, { type FloatingPanelPosition } from './components/FloatingPanel';
 import GameButton, { type GameButtonType } from './components/GameButton';
 import GameplayInstructions from './components/GameplayInstructions';
-import Leaderboards, { type LeaderboardContent } from './components/Leaderboards';
+import Leaderboards, {
+  type LeaderboardContent,
+  type LeaderboardEntry,
+  type LeaderboardTab,
+} from './components/Leaderboards';
 import LoadingSpinner from './components/LoadingSpinner';
 import Modal from './components/Modal';
 import Overlay from './components/Overlay';
@@ -84,6 +88,7 @@ const LEADERBOARD_CONTENT: LeaderboardContent = {
   subtitle: 'Every quiz gets you closer to the top.',
   periodLabel: 'WEEKLY',
   scoreNote: 'Earn points by exploring the map',
+  tabsLabel: 'Game mode leaderboards',
   youLabel: 'YOU',
   pointsLabel: 'pts',
   emptyState: 'No scores yet. Be the first to play!',
@@ -92,6 +97,32 @@ const LEADERBOARD_CONTENT: LeaderboardContent = {
       You are currently ', <strong>#${rank}</strong>
     </>
   ),
+};
+
+const LEADERBOARD_TABS: LeaderboardTab[] = GAME_MODES.map(({ id, name }) => ({
+  id: String(id),
+  label: name,
+}));
+
+const LEADERBOARD_ENTRIES: Record<string, LeaderboardEntry[]> = {
+  '1': [
+    { name: 'Sofia', displayName: 'Sofia M.', score: 480, rank: 1 },
+    { name: 'Luka', displayName: 'Luka P.', score: 420, rank: 2 },
+    { name: 'Explorer', displayName: 'You', score: 360, rank: 3 },
+    { name: 'Nina', displayName: 'Nina K.', score: 290, rank: 4 },
+  ],
+  '2': [
+    { name: 'Luka', displayName: 'Luka P.', score: 520, rank: 1 },
+    { name: 'Nina', displayName: 'Nina K.', score: 410, rank: 2 },
+    { name: 'Explorer', displayName: 'You', score: 350, rank: 3 },
+    { name: 'Sofia', displayName: 'Sofia M.', score: 280, rank: 4 },
+  ],
+  '3': [
+    { name: 'Nina', displayName: 'Nina K.', score: 610, rank: 1 },
+    { name: 'Explorer', displayName: 'You', score: 430, rank: 2 },
+    { name: 'Sofia', displayName: 'Sofia M.', score: 390, rank: 3 },
+    { name: 'Luka', displayName: 'Luka P.', score: 310, rank: 4 },
+  ],
 };
 
 const RESULT_SUMMARY_CONTENT: ResultSummaryContent = {
@@ -109,6 +140,7 @@ const RESULT_SUMMARY_CONTENT: ResultSummaryContent = {
 };
 
 const App = () => {
+  const [activeLeaderboardTab, setActiveLeaderboardTab] = useState('1');
   const [selectedMode, setSelectedMode] = useState<string>('Capital Cities');
   const [activeButton, setActiveButton] = useState<GameButtonType>('start');
   const [isSpinnerOpen, setIsSpinnerOpen] = useState(false);
@@ -595,13 +627,11 @@ const App = () => {
               <div className={styles.leaderboardStage}>
                 <Leaderboards
                   currentPlayerName="Explorer"
-                  entries={[
-                    { name: 'Sofia', displayName: 'Sofia M.', score: 480, rank: 1 },
-                    { name: 'Luka', displayName: 'Luka P.', score: 420, rank: 2 },
-                    { name: 'Explorer', displayName: 'You', score: 360, rank: 3 },
-                    { name: 'Nina', displayName: 'Nina K.', score: 290, rank: 4 },
-                  ]}
+                  entries={LEADERBOARD_ENTRIES[activeLeaderboardTab]}
                   content={LEADERBOARD_CONTENT}
+                  tabs={LEADERBOARD_TABS}
+                  activeTabId={activeLeaderboardTab}
+                  onTabChange={setActiveLeaderboardTab}
                 />
               </div>
             </div>
