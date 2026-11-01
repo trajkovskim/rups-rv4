@@ -35,19 +35,6 @@
   transform: translate(-50%, -50%);
 }
 
-.start {
-  width: 4.5rem;
-  height: 4.5rem;
-  border-radius: 50%;
-}
-
-.start.withLabel {
-  width: auto;
-  height: 3rem;
-  padding: 0.65rem 1rem;
-  border-radius: 999px;
-}
-
 .stop {
   background: #b9414b;
 }
@@ -78,6 +65,7 @@
   padding: 0.65rem 0.9rem;
   gap: 0.45rem;
   white-space: nowrap;
+  border-radius: 20px;
 }
 
 .withLabel svg {

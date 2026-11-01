@@ -1,10 +1,9 @@
 import type { HTMLAttributes, ReactNode } from 'react';
 import styles from './FloatingPanel.module.css';
-import type { WithoutAria } from './types';
 
 export type FloatingPanelPosition = 'top-left' | 'top-right' | 'bottom-center' | 'bottom-right';
 
-export type FloatingPanelProps = WithoutAria<Omit<HTMLAttributes<HTMLDivElement>, 'children'>> & {
+export type FloatingPanelProps = Omit<HTMLAttributes<HTMLDivElement>, 'children'> & {
   children: ReactNode;
   position: FloatingPanelPosition;
   mobilePosition?: FloatingPanelPosition;

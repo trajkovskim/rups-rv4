@@ -1,8 +1,7 @@
 import type { ComponentProps } from 'react';
 import styles from './LoadingSpinner.module.css';
-import type { WithoutAria } from './types';
 
-type DivProps = WithoutAria<Omit<ComponentProps<'div'>, 'children'>>;
+type DivProps = Omit<ComponentProps<'div'>, 'children'>;
 
 export type LoadingSpinnerProps = DivProps;
 
