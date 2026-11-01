@@ -1,0 +1,90 @@
+.panel {
+  --panel-gutter: 1.25rem;
+
+  position: absolute;
+  z-index: 1;
+}
+
+.highPriority {
+  z-index: 2;
+}
+
+.wide {
+  width: min(24rem, calc(100vw - 2.5rem));
+}
+
+.topLeft,
+.topRight {
+  top: var(--panel-gutter);
+}
+
+.topLeft {
+  left: var(--panel-gutter);
+}
+
+.topRight {
+  right: var(--panel-gutter);
+}
+
+.bottomCenter {
+  bottom: var(--panel-gutter);
+  left: 50%;
+  width: min(36rem, calc(100% - 2.5rem));
+  transform: translateX(-50%);
+}
+
+.bottomRight {
+  right: var(--panel-gutter);
+  bottom: var(--panel-gutter);
+  width: min(24rem, calc(100% - 2.5rem));
+}
+
+@media (max-width: 600px) {
+  .panel {
+    --panel-gutter: 0.75rem;
+  }
+
+  .bottomCenter {
+    width: calc(100% - 1.5rem);
+  }
+
+  .bottomRight,
+  .mobileBottomRight {
+    left: var(--panel-gutter);
+    width: auto;
+    transform: none;
+  }
+
+  .mobileTopLeft,
+  .mobileTopRight {
+    top: var(--panel-gutter);
+    bottom: auto;
+    width: auto;
+    transform: none;
+  }
+
+  .mobileTopLeft {
+    right: auto;
+    left: var(--panel-gutter);
+  }
+
+  .mobileTopRight {
+    right: var(--panel-gutter);
+    left: auto;
+  }
+
+  .mobileBottomCenter {
+    top: auto;
+    right: auto;
+    bottom: var(--panel-gutter);
+    left: 50%;
+    width: calc(100% - 1.5rem);
+    transform: translateX(-50%);
+  }
+
+  .mobileBottomRight {
+    top: auto;
+    right: var(--panel-gutter);
+    bottom: var(--panel-gutter);
+  }
+}

@@ -1,0 +1,44 @@
+.score {
+  display: grid;
+  width: max-content;
+  max-width: min(13rem, calc(100vw - 1.5rem));
+  gap: 0.35rem;
+  padding: 0.8rem 1rem;
+  border: var(--border-glass);
+  border-radius: 1rem;
+  background: var(--color-surface);
+  box-shadow: var(--shadow-floating);
+  color: var(--color-text-strong);
+}
+
+.playerName,
+.scoreLabel {
+  color: var(--color-muted);
+  font-size: 0.68rem;
+  font-weight: 750;
+  letter-spacing: 0.07em;
+  text-transform: uppercase;
+}
+
+.playerName {
+  overflow-wrap: anywhere;
+}
+
+.points {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  padding-top: 0.15rem;
+}
+
+.scoreValue {
+  font-size: 1.35rem;
+  font-weight: 850;
+  line-height: 1.1;
+}
+
+@media (max-width: 600px) {
+  .score {
+    padding: 0.6rem 0.75rem;
+  }
+}
