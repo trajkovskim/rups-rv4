@@ -73,13 +73,6 @@ const GAME_MODES = [
     icon: '🗺️',
     display: { country: true },
   },
-  {
-    id: 3,
-    name: 'History & Fun Facts',
-    description: 'Learn surprising stories from across Europe.',
-    icon: '✨',
-    display: { country: true, city: true },
-  },
 ];
 
 const LEADERBOARD_CONTENT: LeaderboardContent = {
@@ -116,12 +109,6 @@ const LEADERBOARD_ENTRIES: Record<string, LeaderboardEntry[]> = {
     { name: 'Nina', displayName: 'Nina K.', score: 410, rank: 2 },
     { name: 'Explorer', displayName: 'You', score: 350, rank: 3 },
     { name: 'Sofia', displayName: 'Sofia M.', score: 280, rank: 4 },
-  ],
-  '3': [
-    { name: 'Nina', displayName: 'Nina K.', score: 610, rank: 1 },
-    { name: 'Explorer', displayName: 'You', score: 430, rank: 2 },
-    { name: 'Sofia', displayName: 'Sofia M.', score: 390, rank: 3 },
-    { name: 'Luka', displayName: 'Luka P.', score: 310, rank: 4 },
   ],
 };
 

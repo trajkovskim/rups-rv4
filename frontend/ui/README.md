@@ -1,36 +1,59 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
+# Meridiani UI
 
-## Getting Started
+The Next.js app uses the shared `@meridiani/components` library for the map and
+game interface. Questions, answer checks, map data, and leaderboard entries are
+loaded through the services in `api/`. The MapLibre worker is copied from its
+package into `public/` automatically before development, build, and start.
 
-First, run the development server:
+## Run locally
 
-```bash
-npm run dev
-# or
-yarn dev
-# or
-pnpm dev
-# or
-bun dev
+From the `frontend` workspace:
+
+```sh
+npm install
+npm run build --workspace @meridiani/components
+npm run dev --workspace @meridiani/ui
 ```
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+Set `NEXT_PUBLIC_API_URL` in `frontend/ui/.env.local` to the API base URL when it
+is not available at `/api`. The app uses the bundled Europe map if the map-data
+service is unavailable; API errors for gameplay and leaderboard data are shown
+in the app.
 
-You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
+Use `setGlobalApiHeaders` from `api/api.ts` to configure headers at runtime.
+They are merged into every API request; request-specific headers override
+matching global headers. For example, configure a runtime client identifier
+before making requests:
 
-This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
+```ts
+import { setGlobalApiHeaders } from './api/api';
 
-## Learn More
+setGlobalApiHeaders({ 'X-Client-Id': runtimeConfig.clientId });
+```
 
-To learn more about Next.js, take a look at the following resources:
+Calling it again replaces the configured global headers. Do not put secrets in
+browser-side configuration; use a server-side API proxy for credentials that
+must remain private.
 
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
+For bearer-token authentication, call `addAuthorization` with the access token.
+It adds an `Authorization: Bearer ...` header to every API request:
 
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
+```ts
+import { addAuthorization } from './api/api';
 
-## Deploy on Vercel
+addAuthorization(runtimeConfig.accessToken);
+```
 
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
+To use built-in sample questions, answer checking, and leaderboard instead of
+the live gameplay API, set `NEXT_PUBLIC_USE_MOCK_QUESTIONS=true` in
+`frontend/ui/.env.local`. To use the bundled Europe map instead of the map API,
+set `NEXT_PUBLIC_USE_MOCK_GEO=true`. Restart the development server after
+changing either variable. Unset a variable or set it to `false` to use its live
+API service.
 
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
+## Validate
+
+```sh
+npm run lint --workspace @meridiani/ui
+npm run build --workspace @meridiani/ui
+```

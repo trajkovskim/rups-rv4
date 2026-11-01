@@ -61,31 +61,6 @@ const MOCK_QUESTIONS: readonly MockQuestion[] = [
     fact: "Croatia has more than a thousand islands along its Adriatic coast.",
     correctAnswer: { lng: 16.0, lat: 45.1 },
   },
-  {
-    id: 301,
-    type: QuestionType.HISTORY,
-    prompt:
-      "Find Sarajevo, where the 1914 assassination helped trigger World War I.",
-    hint: "Look in Bosnia and Herzegovina.",
-    fact: "The assassination of Archduke Franz Ferdinand took place in Sarajevo.",
-    correctAnswer: { lng: 18.4131, lat: 43.8563 },
-  },
-  {
-    id: 302,
-    type: QuestionType.HISTORY,
-    prompt: "Find Pompeii, the ancient city buried by Mount Vesuvius.",
-    hint: "Look near Naples in southern Italy.",
-    fact: "The eruption of Mount Vesuvius buried Pompeii in AD 79.",
-    correctAnswer: { lng: 14.4869, lat: 40.7497 },
-  },
-  {
-    id: 303,
-    type: QuestionType.HISTORY,
-    prompt: "Find Kraków, home to the historic Wawel Castle.",
-    hint: "Look in southern Poland, near the Vistula River.",
-    fact: "Wawel Castle was once the residence of Polish kings.",
-    correctAnswer: { lng: 19.9445, lat: 50.0647 },
-  },
 ];
 
 const MOCK_LEADERBOARDS: Record<number, LeaderboardEntry[]> = {
@@ -98,11 +73,6 @@ const MOCK_LEADERBOARDS: Record<number, LeaderboardEntry[]> = {
     { name: "Compass", score: 90, rank: 1 },
     { name: "Atlas", score: 70, rank: 2 },
     { name: "Wayfinder", score: 50, rank: 3 },
-  ],
-  3: [
-    { name: "Wayfinder", score: 100, rank: 1 },
-    { name: "Globetrotter", score: 60, rank: 2 },
-    { name: "Compass", score: 30, rank: 3 },
   ],
 };
 

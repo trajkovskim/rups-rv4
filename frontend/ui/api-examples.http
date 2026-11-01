@@ -1,0 +1,82 @@
+@baseUrl = http://localhost:8080/api
+@accessToken = replace-with-access-token
+
+### Get city questions
+GET {{baseUrl}}/questions?type=cities
+Accept: application/json
+# Authorization: Bearer {{accessToken}}
+
+# Expected response:
+# [
+#   {
+#     "id": 101,
+#     "prompt": "Which city is the capital of France?",
+#     "hint": "Look in northern France, near the Seine.",
+#     "fact": "Paris is home to the Eiffel Tower and the Louvre."
+#   }
+# ]
+
+### Check a question answer
+POST {{baseUrl}}/questions/check
+Content-Type: application/json
+Accept: application/json
+# Authorization: Bearer {{accessToken}}
+
+{
+  "questionId": 101,
+  "answer": {
+    "lng": 2.3522,
+    "lat": 48.8566
+  }
+}
+
+# Expected response:
+# {
+#   "correctAnswer": {
+#     "lng": 2.3522,
+#     "lat": 48.8566
+#   },
+#   "correctness": "yes",
+#   "points": 10
+# }
+
+### Get a leaderboard
+GET {{baseUrl}}/leaderboard?gameModeId=1
+Accept: application/json
+# Authorization: Bearer {{accessToken}}
+
+# Expected response:
+# [
+#   { "name": "Atlas", "score": 80, "rank": 1 },
+#   { "name": "Compass", "score": 60, "rank": 2 },
+#   { "name": "Globetrotter", "score": 40, "rank": 3 }
+# ]
+
+### Get map GeoJSON
+GET {{baseUrl}}/geojson
+Accept: application/json
+# Authorization: Bearer {{accessToken}}
+
+# Expected response (abbreviated):
+# {
+#   "type": "FeatureCollection",
+#   "features": [
+#     {
+#       "type": "Feature",
+#       "properties": {
+#         "country": "Example country"
+#       },
+#       "geometry": {
+#         "type": "Polygon",
+#         "coordinates": [
+#           [
+#             [14.0, 46.0],
+#             [15.0, 46.0],
+#             [15.0, 47.0],
+#             [14.0, 46.0]
+#           ]
+#         ]
+#       }
+#     }
+#   ]
+# }

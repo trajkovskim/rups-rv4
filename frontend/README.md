@@ -14,6 +14,14 @@ npm install
 npm run dev
 ```
 
+```bash
+cd frontend
+npm run build
+npm run ui
+```
+
 Nato odpri [http://localhost:3000](http://localhost:3000).
 
 Če si repozitorij samo posodobil (`git pull`), zaženi `npm install` v mapi `mock` še enkrat, ker so lahko vmes prišle nove odvisnosti.
+
+

@@ -38,7 +38,6 @@ export interface QuestionAnswerFeedback {
 export enum QuestionType {
   COUNTRIES = 'countries',
   CITIES = 'cities',
-  HISTORY = 'history',
 }
 
 export type GeoJsonPosition = Position;
