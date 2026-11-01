@@ -1,0 +1,25 @@
+.loading-spinner {
+  display: grid;
+  place-items: center;
+}
+
+.loading-spinner__indicator {
+  width: 2.5rem;
+  height: 2.5rem;
+  border: 0.3rem solid #d1d5db;
+  border-top-color: #2563eb;
+  border-radius: 50%;
+  animation: loading-spinner-rotate 0.8s linear infinite;
+}
+
+@keyframes loading-spinner-rotate {
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .loading-spinner__indicator {
+    animation-duration: 2s;
+  }
+}
