@@ -21,7 +21,7 @@ export type ResultSummaryContent = {
   questionLabel: (questionNumber: number) => ReactNode;
   correctAnswerLabel: (answer: ReactNode) => ReactNode;
   pointsUnit: ReactNode;
-  replayLabel: Exclude<ReactNode, boolean | null | undefined>;
+  replayLabel: ReactNode
 };
 
 export type ResultSummaryProps = {

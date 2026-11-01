@@ -5,7 +5,7 @@ import Modal from './Modal';
 
 export type CardsModalBackButton = {
   onClick: () => void;
-  label: Exclude<ReactNode, boolean | null | undefined>;
+  label?: ReactNode;
 };
 
 export type CardsModalProps = {

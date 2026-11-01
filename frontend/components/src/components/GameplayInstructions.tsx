@@ -10,7 +10,7 @@ export type GameplayInstructionStep = {
 export type GameplayInstructionsProps = {
   isOpen: boolean;
   onClose: () => void;
-  backLabel: Exclude<ReactNode, boolean | null | undefined>;
+  backLabel?: ReactNode;
   eyebrow: ReactNode;
   title: ReactNode;
   description?: ReactNode;

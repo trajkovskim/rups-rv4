@@ -16,33 +16,20 @@ export type QuestionPanelProps = {
   feedback?: QuestionFeedback;
   onNext?: () => void;
   questionLabel?: ReactNode;
-  selectedAnswerLabel?: ReactNode;
-  submitLabel: Exclude<ReactNode, boolean | null | undefined>;
-  nextLabel: Exclude<ReactNode, boolean | null | undefined>;
+  submitLabel?: ReactNode;
+  nextLabel?: ReactNode;
 };
 
-type QuestionContentProps = Pick<
-  QuestionPanelProps,
-  'question' | 'selectedAnswer' | 'questionLabel' | 'selectedAnswerLabel'
->;
+type QuestionContentProps = Pick<QuestionPanelProps, 'question' | 'questionLabel'> & {
+  footer?: ReactNode;
+};
 
-const QuestionContent = ({
-  question,
-  selectedAnswer,
-  questionLabel,
-  selectedAnswerLabel,
-}: QuestionContentProps) => (
+const QuestionContent = ({ question, questionLabel, footer }: QuestionContentProps) => (
   <div className={styles.content}>
     {questionLabel && <span className={styles.eyebrow}>{questionLabel}</span>}
     <h2 className={styles.question}>{question?.prompt}</h2>
-    {selectedAnswer ? (
-      <p className={styles.answer}>
-        {selectedAnswerLabel && <>{selectedAnswerLabel} </>}
-        {selectedAnswer}
-      </p>
-    ) : (
-      question?.hint && <p className={styles.hint}>{question.hint}</p>
-    )}
+    {question?.hint && <p className={styles.hint}>{question.hint}</p>}
+    {footer}
   </div>
 );
 
@@ -53,7 +40,6 @@ const QuestionPanel = ({
   feedback,
   onNext,
   questionLabel,
-  selectedAnswerLabel,
   submitLabel,
   nextLabel,
 }: QuestionPanelProps) => {
@@ -61,16 +47,9 @@ const QuestionPanel = ({
 
   return (
     <section className={`${styles.panel} ${feedback ? styles[feedback] : ''}`}>
-      <QuestionContent
-        question={question}
-        selectedAnswer={selectedAnswer}
-        questionLabel={questionLabel}
-        selectedAnswerLabel={selectedAnswerLabel}
-      />
+      <QuestionContent question={question} questionLabel={questionLabel} />
       {isAnswerSubmitted ? (
-        onNext && (
-          <GameButton type="next" onClick={onNext} label={nextLabel} />
-        )
+        onNext && <GameButton type="next" onClick={onNext} label={nextLabel} />
       ) : (
         <GameButton
           type="submit"

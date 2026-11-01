@@ -139,6 +139,7 @@ const App = () => {
 
   const handleMapClick = ({ country, city, lngLat }: EuropeMapClickEvent) => {
     const place = city ? `${city}, ${country ?? 'Europe'}` : (country ?? 'Map location');
+    mapRef.current?.clear();
     setMapMessage(`${place} · ${lngLat.lat.toFixed(2)}, ${lngLat.lng.toFixed(2)}`);
     mapRef.current?.addMarker(lngLat);
     mapRef.current?.addPopup(lngLat, place);
@@ -486,7 +487,6 @@ const App = () => {
                   onSubmit={handleQuestionSubmit}
                   onNext={handleNextQuestion}
                   questionLabel={`QUESTION ${questionIndex + 1} OF ${QUESTION_DEMOS.length}`}
-                  selectedAnswerLabel="Selected:"
                   submitLabel="Check answer"
                   nextLabel="Next question"
                 />
