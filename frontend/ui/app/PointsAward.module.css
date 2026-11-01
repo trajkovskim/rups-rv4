@@ -1,0 +1,31 @@
+.points {
+  display: block;
+  color: var(--color-success, #16803c);
+  font-size: 1rem;
+  font-weight: 850;
+  text-shadow: 0 1px 3px rgb(255 255 255 / 75%);
+  animation: points-float 1.2s ease-out forwards;
+}
+
+@keyframes points-float {
+  0% {
+    opacity: 0;
+    transform: translateY(0.35rem) scale(0.9);
+  }
+
+  15% {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+  }
+
+  100% {
+    opacity: 0;
+    transform: translateY(-0.9rem);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .points {
+    animation-duration: 0.01ms;
+  }
+}
