@@ -1,0 +1,225 @@
+.leaderboard {
+  width: 100%;
+  max-height: calc(100vh - 1.5rem);
+  overflow-y: auto;
+  border: 1px solid var(--color-border);
+  border-radius: 1.25rem;
+  background: var(--color-surface);
+  box-shadow: 0 1.25rem 3.5rem rgba(20 37 74, 0.22);
+  color: var(--color-text);
+  overscroll-behavior: contain;
+}
+
+.header {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 0.75rem;
+  padding: 1.35rem 1.4rem 1rem;
+  background: var(--color-card);
+}
+
+.eyebrow {
+  margin: 0 0 0.35rem;
+  color: #627197;
+  font-size: 0.64rem;
+  font-weight: 800;
+  letter-spacing: 0.13em;
+}
+
+.title {
+  margin: 0;
+  font-size: 1.55rem;
+  font-weight: 800;
+  letter-spacing: -0.045em;
+  line-height: 1.1;
+}
+
+.subtitle {
+  margin: 0.45rem 0 0;
+  color: var(--color-muted);
+  font-size: 0.78rem;
+}
+
+.weekBadge {
+  flex: 0 0 auto;
+  margin-top: 0.1rem;
+  padding: 0.38rem 0.55rem;
+  border: 1px solid #d8e6ff;
+  border-radius: 999px;
+  background: var(--color-surface);
+  color: #4b67c5;
+  font-size: 0.61rem;
+  font-weight: 850;
+  letter-spacing: 0.08em;
+}
+
+.scoreNote {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  margin: 0 1.4rem;
+  padding: 0.75rem 0;
+  border-bottom: 1px solid #edf0f7;
+  color: #747e98;
+  font-size: 0.72rem;
+  font-weight: 600;
+}
+
+.scoreIcon {
+  display: grid;
+  width: 1.35rem;
+  height: 1.35rem;
+  place-items: center;
+  border-radius: 0.45rem;
+  background: #fff3cc;
+  color: #e4a300;
+  font-size: 0.8rem;
+}
+
+.entries {
+  display: grid;
+  gap: 0.4rem;
+  margin: 0;
+  padding: 0.85rem 0.9rem;
+  list-style: none;
+}
+
+.entry {
+  display: grid;
+  min-height: 3.15rem;
+  grid-template-columns: 2rem 2.2rem minmax(0, 1fr) auto;
+  align-items: center;
+  gap: 0.55rem;
+  padding: 0.35rem 0.5rem;
+  border: 1px solid transparent;
+  border-radius: 0.8rem;
+}
+
+.entry--top-2,
+.entry:hover {
+  background: var(--color-card);
+}
+
+.entry--top-1 {
+  background: #fff9e8;
+}
+
+.entry--top-3 {
+  background: #fff4ed;
+}
+
+.entry--current {
+  border-color: #b6d2ff;
+  background: #eff6ff;
+}
+
+.rank {
+  color: #8790a7;
+  font-size: 0.8rem;
+  font-weight: 800;
+  text-align: center;
+}
+
+.rank [role="img"] {
+  font-size: 1.15rem;
+}
+
+.avatar {
+  display: grid;
+  width: 2.15rem;
+  height: 2.15rem;
+  place-items: center;
+  border: 2px solid #fff;
+  border-radius: 50%;
+  background: #e4e9f4;
+  color: #4559a4;
+  font-size: 0.78rem;
+  font-weight: 800;
+}
+
+.playerName {
+  display: flex;
+  min-width: 0;
+  align-items: center;
+  gap: 0.4rem;
+  overflow: hidden;
+  color: #28334f;
+  font-size: 0.84rem;
+  font-weight: 750;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.youBadge {
+  flex: 0 0 auto;
+  padding: 0.17rem 0.3rem;
+  border-radius: 0.3rem;
+  background: #dceaff;
+  color: #4167b7;
+  font-size: 0.52rem;
+  font-weight: 900;
+  letter-spacing: 0.05em;
+}
+
+.points {
+  color: #344263;
+  font-size: 0.78rem;
+  font-weight: 850;
+  white-space: nowrap;
+}
+
+.points span {
+  color: #929ab0;
+  font-size: 0.64rem;
+  font-weight: 650;
+}
+
+.emptyState {
+  padding: 1.5rem 0.75rem;
+  color: #747e98;
+  font-size: 0.85rem;
+  text-align: center;
+}
+
+.footer {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  margin: 0 1.4rem;
+  padding: 0.9rem 0 1.1rem;
+  border-top: 1px solid #edf0f7;
+  color: #69748f;
+  font-size: 0.72rem;
+}
+
+.footer strong {
+  color: #385eae;
+}
+
+.footerStar {
+  color: #f1b728;
+  font-size: 1rem;
+}
+
+@media (max-width: 420px) {
+  .header {
+    padding: 1.15rem 1.1rem 0.9rem;
+  }
+
+  .scoreNote,
+  .footer {
+    margin-right: 1.1rem;
+    margin-left: 1.1rem;
+  }
+
+  .entries {
+    padding-right: 0.65rem;
+    padding-left: 0.65rem;
+  }
+
+  .entry {
+    grid-template-columns: 1.7rem 2rem minmax(0, 1fr) auto;
+    gap: 0.4rem;
+  }
+}

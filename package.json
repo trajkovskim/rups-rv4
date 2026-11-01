@@ -1,0 +1,12 @@
+{
+  "name": "meridiani",
+  "version": "1.0.0",
+  "private": true,
+  "workspaces": [
+    "components"
+  ],
+  "scripts": {
+    "test": "npm run test --workspaces --if-present",
+    "build": "npm run build --workspaces --if-present"
+  }
+}
