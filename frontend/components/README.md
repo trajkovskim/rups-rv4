@@ -70,25 +70,44 @@ Display content such as labels, question prompts, and player names accepts
 app using the component:
 
 ```tsx
-import { Leaderboards, type LeaderboardContent, type LeaderboardEntry } from 'map-component';
+import {
+  Leaderboards,
+  type LeaderboardContent,
+  type LeaderboardEntry,
+  type LeaderboardTab,
+} from 'map-component';
 
 const entries: LeaderboardEntry[] = [];
+const tabs: LeaderboardTab[] = [
+  { id: 'classroom', label: 'Classroom' },
+  { id: 'school', label: 'School' },
+];
 const content: LeaderboardContent = {
   eyebrow: 'THE CLASSROOM CHALLENGE',
   title: 'Top explorers',
   subtitle: 'Every quiz gets you closer to the top.',
   periodLabel: 'WEEKLY',
   scoreNote: 'Earn points by exploring the map',
-  rankingsLabel: 'Weekly player rankings',
-  rankLabel: (rank) => `Rank ${rank}`,
+  tabsLabel: 'Leaderboard categories',
   youLabel: 'YOU',
   pointsLabel: 'pts',
   emptyState: 'No scores yet. Be the first to play!',
   currentPlayerSummary: (rank) => <>You are currently #{rank}.</>,
 };
 
-<Leaderboards entries={entries} currentPlayerName="Explorer" content={content} />;
+<Leaderboards
+  entries={entries}
+  currentPlayerName="Explorer"
+  content={content}
+  tabs={tabs}
+  activeTabId="classroom"
+  onTabChange={handleTabChange}
+/>;
 ```
+
+Tabs are optional and generic: the consuming application supplies their IDs and
+labels, tracks the active tab, and loads the matching entries. `isLoading` and
+`loadingLabel` can be used while those entries are being fetched.
 
 The stylesheet includes the component styles and design-token CSS variables. MapLibre's
 CSS is included in that stylesheet.

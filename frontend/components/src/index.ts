@@ -24,6 +24,7 @@ export { default as Leaderboards } from './components/Leaderboards';
 export type {
   LeaderboardContent,
   LeaderboardEntry,
+  LeaderboardTab,
   LeaderboardsProps,
 } from './components/Leaderboards';
 export { default as LoadingSpinner } from './components/LoadingSpinner';
