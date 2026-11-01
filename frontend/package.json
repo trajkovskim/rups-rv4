@@ -3,7 +3,8 @@
   "version": "1.0.0",
   "private": true,
   "workspaces": [
-    "components"
+    "components",
+    "ui"
   ],
   "scripts": {
     "test": "npm run test --workspaces --if-present",
