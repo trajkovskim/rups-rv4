@@ -1,4 +1,4 @@
-import React, { useEffect, useRef, useState, useImperativeHandle } from 'react';
+import React, { useEffect, useRef, useImperativeHandle } from 'react';
 import {
   Map,
   NavigationControl,
@@ -13,7 +13,6 @@ import { EUROPE_BOUNDARIES } from './constants';
 import 'maplibre-gl/dist/maplibre-gl.css';
 
 import workerUrl from 'maplibre-gl/dist/maplibre-gl-worker.mjs?worker&url';
-import LoadingSpinner from './LoadingSpinner';
 
 setWorkerUrl(workerUrl);
 
@@ -41,12 +40,14 @@ type MapProps = {
   geojson?: any;
   boundaries?: LngLatBounds;
 
+  onLoaded?: () => void;
   onClick?: (data: ClickEventData) => void;
 };
 
-type Props = MapProps & Omit<React.ComponentProps<'div'>, keyof MapProps | 'ref'> & {
-  ref?: React.Ref<EuropeMapRefHandle>;
-};
+type Props = MapProps &
+  Omit<React.ComponentProps<'div'>, keyof MapProps | 'ref'> & {
+    ref?: React.Ref<EuropeMapRefHandle>;
+  };
 
 const updateSymbolVisibility = (map: Map, layer: LayerSpecification, display: MapProps['display']) => {
   if (layer.type !== 'symbol') {
@@ -109,24 +110,24 @@ const createMap = (container: HTMLDivElement, { display, boundaries = EUROPE_BOU
   return map;
 };
 
-const EuropeMap: React.FC<Props> = ({ref, ...props}: Props) => {
-  const { display, geojson, boundaries, onClick, ...rest } = props;
+const EuropeMap: React.FC<Props> = ({ ref, ...props }: Props) => {
+  const { display, geojson, boundaries, onClick, onLoaded, ...rest } = props;
 
-  const [loading, setLoading] = useState<boolean>(true);
   const mapContainer = useRef<HTMLDivElement>(null);
   const mapInstance = useRef<Map>(null);
   const marker = useRef<Marker>(null);
-  const onClickRef = useRef(onClick);
+  const handlersRef = useRef({ onClick, onLoaded });
 
   useEffect(() => {
-    onClickRef.current = onClick;
-  }, [onClick]);
+    handlersRef.current.onClick = onClick;
+    handlersRef.current.onLoaded = onLoaded;
+  }, [onClick, onLoaded]);
 
   useEffect(() => {
     if (mapContainer.current && !mapInstance.current) {
       const instance = createMap(mapContainer.current, { display, geojson, boundaries });
 
-      instance.on('idle', () => setLoading(false));
+      instance.on('idle', () => onLoaded?.());
       instance.on('click', (event) => {
         const features = instance.queryRenderedFeatures(event.point);
         const relevantFeatures = features.filter((feature) => feature.layer.id === 'data-layer');
@@ -142,7 +143,7 @@ const EuropeMap: React.FC<Props> = ({ref, ...props}: Props) => {
         }
 
         marker.current = new Marker().setLngLat(event.lngLat).addTo(instance);
-        onClickRef.current?.({
+        handlersRef.current.onClick?.({
           point: event.point,
           city: clickedFeature.properties.city,
           country: clickedFeature.properties.country,
@@ -160,32 +161,22 @@ const EuropeMap: React.FC<Props> = ({ref, ...props}: Props) => {
     };
   }, []);
 
-  useImperativeHandle(ref, () => ({
-    clearMarker: () => marker.current?.remove(),
-    marker: marker.current
-  }), []);
+  useImperativeHandle(
+    ref,
+    () => ({
+      clearMarker: () => marker.current?.remove(),
+      marker: marker.current,
+    }),
+    [],
+  );
 
   useEffect(() => {
     mapInstance.current?.getStyle()?.layers.forEach((layer) => {
       updateSymbolVisibility(mapInstance.current!, layer, display);
     });
-  }, [display, loading]);
+  }, [display]);
 
-  return (
-    <div>
-      {loading && <LoadingSpinner />}
-      <div
-        {...rest}
-        ref={mapContainer}
-        style={{
-          transition: 'opacity 400ms ease-in',
-          opacity: loading ? 0 : 1,
-          visibility: loading ? 'hidden' : 'visible',
-          ...rest.style,
-        }}
-      />
-    </div>
-  );
+  return <div {...rest} ref={mapContainer} />;
 };
 
 export default EuropeMap;
