@@ -2,54 +2,65 @@ import React, { useEffect, useRef, useImperativeHandle } from 'react';
 import {
   Map,
   NavigationControl,
+  Marker,
+  Popup,
   LngLatBounds,
   setWorkerUrl,
-  Point,
+  type Point,
   type LayerSpecification,
-  Marker,
+  type LngLat,
+
 } from 'maplibre-gl';
-import { EUROPE_BOUNDARIES } from './constants';
+
+export const EUROPE_BOUNDARIES = new LngLatBounds([-25.0, 34.0], [45.0, 71.5]);
 
 import 'maplibre-gl/dist/maplibre-gl.css';
 
 import workerUrl from 'maplibre-gl/dist/maplibre-gl-worker.mjs?worker&url';
+import type { FeatureCollection, GeoJsonProperties, Geometry } from 'geojson';
 
 setWorkerUrl(workerUrl);
 
 export interface EuropeMapRefHandle {
-  marker?: Marker | null;
-  clearMarker: () => void;
+  addMarker: (lngLat: LngLat) => void;
+  marker: () => Marker | null;
+  removeMarker: () => void;
+  addPopup: (lngLat: LngLat, content: string) => void;
+  removePopup: () => void;
+  popup: () => Popup | null;
 }
 
-type ClickEventData = {
+export type EuropeMapClickEvent = {
   country?: string;
   city?: string;
   point: Point;
+  lngLat: LngLat;
+};
+
+export type EuropeMapDisplay = {
+  water?: boolean;
+  village?: boolean;
+  country?: boolean;
+  city?: boolean;
+  state?: boolean;
+  navigation?: boolean;
 };
 
 type MapProps = {
-  display?: {
-    water?: boolean;
-    village?: boolean;
-    country?: boolean;
-    city?: boolean;
-    state?: boolean;
-    navigation?: boolean;
-  };
-
-  geojson?: any;
+  display?: EuropeMapDisplay;
+  geojson: FeatureCollection<Geometry, GeoJsonProperties>;
   boundaries?: LngLatBounds;
 
   onLoaded?: () => void;
-  onClick?: (data: ClickEventData) => void;
+  onClick?: (data: EuropeMapClickEvent) => void;
 };
 
-type Props = MapProps &
+export type EuropeMapProps = MapProps &
   Omit<React.ComponentProps<'div'>, keyof MapProps | 'ref'> & {
     ref?: React.Ref<EuropeMapRefHandle>;
   };
 
-const updateSymbolVisibility = (map: Map, layer: LayerSpecification, display: MapProps['display']) => {
+const updateSymbolVisibility = (map: Map, layer: LayerSpecification, display: EuropeMapDisplay | undefined) => {
   if (layer.type !== 'symbol') {
     return;
   }
@@ -110,12 +121,13 @@ const createMap = (container: HTMLDivElement, { display, boundaries = EUROPE_BOU
   return map;
 };
 
-const EuropeMap: React.FC<Props> = ({ ref, ...props }: Props) => {
+const EuropeMap = ({ ref, ...props }: EuropeMapProps) => {
   const { display, geojson, boundaries, onClick, onLoaded, ...rest } = props;
 
   const mapContainer = useRef<HTMLDivElement>(null);
   const mapInstance = useRef<Map>(null);
   const marker = useRef<Marker>(null);
+  const popup = useRef<Popup>(null);
   const handlersRef = useRef({ onClick, onLoaded });
 
   useEffect(() => {
@@ -134,19 +146,12 @@ const EuropeMap: React.FC<Props> = ({ ref, ...props }: Props) => {
         const clickedFeature =
           relevantFeatures.find((feature) => 'city' in feature.properties && 'country' in feature.properties) ??
           relevantFeatures.find((feature) => 'city' in feature.properties || 'country' in feature.properties);
-        if (!clickedFeature) {
-          return;
-        }
 
-        if (marker.current) {
-          marker.current.remove();
-        }
-
-        marker.current = new Marker().setLngLat(event.lngLat).addTo(instance);
         handlersRef.current.onClick?.({
+          lngLat: event.lngLat,
           point: event.point,
-          city: clickedFeature.properties.city,
-          country: clickedFeature.properties.country,
+          city: clickedFeature?.properties.city,
+          country: clickedFeature?.properties.country,
         });
       });
 
@@ -164,8 +169,25 @@ const EuropeMap: React.FC<Props> = ({ ref, ...props }: Props) => {
   useImperativeHandle(
     ref,
     () => ({
-      clearMarker: () => marker.current?.remove(),
-      marker: marker.current,
+      popup: () => popup.current,
+      addPopup: (lngLat, content) => {
+        popup.current?.remove();
+        if (mapInstance.current) {
+          popup.current = new Popup({ closeButton: false, closeOnClick: false, closeOnMove: false })
+            .setLngLat(lngLat)
+            .setText(content)
+            .addTo(mapInstance.current);
+        }
+      },
+      removePopup: () => popup.current?.remove(),
+      marker: () => marker.current,
+      addMarker: (lngLat) => {
+        marker.current?.remove();
+        if (mapInstance.current) {
+          marker.current = new Marker().setLngLat(lngLat).addTo(mapInstance.current);
+        }
+      },
+      removeMarker: () => marker.current?.remove(),
     }),
     [],
   );

@@ -1,0 +1,65 @@
+.modal {
+  position: relative;
+  width: min(100%, 56rem);
+  padding: clamp(1.25rem, 3vw, 2.25rem);
+}
+
+.withBack {
+  padding-top: 5rem;
+}
+
+.backRow {
+  position: absolute;
+  top: 3rem;
+  left: 3rem;
+}
+
+.eyebrow {
+  margin: 0 0 0.5rem;
+  color: #526bc0;
+  font-size: 0.7rem;
+  font-weight: 850;
+  letter-spacing: 0.14em;
+}
+
+.title {
+  margin: 0;
+  font-size: clamp(1.65rem, 4vw, 2.5rem);
+  font-weight: 850;
+  letter-spacing: -0.045em;
+}
+
+.description {
+  margin: 0.65rem 0 1.75rem;
+  color: var(--color-muted);
+}
+
+.cards {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 1rem;
+  text-align: left;
+}
+
+.footer {
+  margin-top: 1.25rem;
+}
+
+.footer button {
+  padding: 0.8rem 1.4rem;
+  font-size: 0.9rem;
+}
+
+@media (max-width: 600px) {
+  .modal {
+    padding: 1.25rem 1rem;
+  }
+
+  .withBack {
+    padding-top: 4.5rem;
+  }
+
+  .cards {
+    grid-template-columns: 1fr;
+  }
+}
