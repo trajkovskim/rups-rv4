@@ -1,4 +1,4 @@
-import type { Feature, GeoJsonProperties, Geometry, Position } from 'geojson';
+import type { Feature, FeatureCollection, GeoJsonProperties, Geometry, Position } from 'geojson';
 import europeGeoData from './europe.geo.json';
 import { requestJson } from './api';
 import type { MapGeoData } from './types';
@@ -69,9 +69,7 @@ const parseMapGeoData = (value: unknown): MapGeoData => {
   return value;
 };
 
-const bundledMapGeoData = parseMapGeoData(europeGeoData);
-
-export const getBundledMapGeoData = (): MapGeoData => bundledMapGeoData;
+export const getBundledMapGeoData = (): MapGeoData => europeGeoData as FeatureCollection;
 
 export const getMapGeoData = async (signal?: AbortSignal): Promise<MapGeoData> => {
   const data = await requestJson('/geojson', { signal });
