@@ -1,6 +1,6 @@
 import React, { useEffect, useRef, useImperativeHandle } from 'react';
 import {
-  Map,
+  Map as MapGL,
   NavigationControl,
   Marker,
   Popup,
@@ -8,7 +8,6 @@ import {
   type Point,
   type LayerSpecification,
   type LngLat,
-
 } from 'maplibre-gl';
 
 export const EUROPE_BOUNDARIES = new LngLatBounds([-25.0, 34.0], [45.0, 71.5]);
@@ -18,12 +17,10 @@ import 'maplibre-gl/dist/maplibre-gl.css';
 import type { FeatureCollection, GeoJsonProperties, Geometry } from 'geojson';
 
 export interface EuropeMapRefHandle {
-  addMarker: (lngLat: LngLat) => void;
-  marker: () => Marker | null;
-  removeMarker: () => void;
-  addPopup: (lngLat: LngLat, content: string) => void;
-  removePopup: () => void;
-  popup: () => Popup | null;
+  remove: (r: Marker | Popup) => void;
+  addMarker: (lngLat: LngLat) => Marker | null;
+  addPopup: (lngLat: LngLat, content: string) => Popup | null;
+  clear: () => void;
 }
 
 export type EuropeMapClickEvent = {
@@ -56,7 +53,7 @@ export type EuropeMapProps = MapProps &
     ref?: React.Ref<EuropeMapRefHandle>;
   };
 
-const updateSymbolVisibility = (map: Map, layer: LayerSpecification, display: EuropeMapDisplay | undefined) => {
+const updateSymbolVisibility = (map: MapGL, layer: LayerSpecification, display: EuropeMapDisplay | undefined) => {
   if (layer.type !== 'symbol') {
     return;
   }
@@ -72,8 +69,11 @@ const updateSymbolVisibility = (map: Map, layer: LayerSpecification, display: Eu
   }
 };
 
-const createMap = (container: HTMLDivElement, { display, boundaries = EUROPE_BOUNDARIES, ...rest }: MapProps): Map => {
-  const map = new Map({
+const createMap = (
+  container: HTMLDivElement,
+  { display, boundaries = EUROPE_BOUNDARIES, ...rest }: MapProps,
+): MapGL => {
+  const map = new MapGL({
     container: container,
     style: 'https://tiles.openfreemap.org/styles/liberty',
     center: [10.4515, 51.1657],
@@ -121,9 +121,9 @@ const EuropeMap = ({ ref, ...props }: EuropeMapProps) => {
   const { display, geojson, boundaries, onClick, onLoaded, ...rest } = props;
 
   const mapContainer = useRef<HTMLDivElement>(null);
-  const mapInstance = useRef<Map>(null);
-  const marker = useRef<Marker>(null);
-  const popup = useRef<Popup>(null);
+  const mapInstance = useRef<MapGL>(null);
+  const markers = useRef<Marker[]>([]);
+  const popups = useRef<Popup[]>([]);
   const handlersRef = useRef({ onClick, onLoaded });
 
   useEffect(() => {
@@ -165,25 +165,41 @@ const EuropeMap = ({ ref, ...props }: EuropeMapProps) => {
   useImperativeHandle(
     ref,
     () => ({
-      popup: () => popup.current,
+      remove: (element) => {
+        if (element instanceof Marker) {
+          markers.current = markers.current.filter((marker) => marker !== element);
+        } else if (element instanceof Popup) {
+          popups.current = popups.current.filter((popup) => popup !== element);
+        }
+        element.remove();
+      },
+      clear: () => {
+        markers.current.forEach((marker) => marker.remove());
+        popups.current.forEach((popup) => popup.remove());
+        markers.current = [];
+        popups.current = [];
+      },
       addPopup: (lngLat, content) => {
-        popup.current?.remove();
-        if (mapInstance.current) {
-          popup.current = new Popup({ closeButton: false, closeOnClick: false, closeOnMove: false })
-            .setLngLat(lngLat)
-            .setText(content)
-            .addTo(mapInstance.current);
+        if (!mapInstance.current) {
+          return null;
         }
+
+        const popup = new Popup({ closeButton: false, closeOnClick: false, closeOnMove: false })
+          .setLngLat(lngLat)
+          .setText(content)
+          .addTo(mapInstance.current);
+        popups.current.push(popup);
+        return popup;
       },
-      removePopup: () => popup.current?.remove(),
-      marker: () => marker.current,
       addMarker: (lngLat) => {
-        marker.current?.remove();
-        if (mapInstance.current) {
-          marker.current = new Marker().setLngLat(lngLat).addTo(mapInstance.current);
+        if (!mapInstance.current) {
+          return null;
         }
+
+        const marker = new Marker().setLngLat(lngLat).addTo(mapInstance.current);
+        markers.current.push(marker);
+        return marker;
       },
-      removeMarker: () => marker.current?.remove(),
     }),
     [],
   );

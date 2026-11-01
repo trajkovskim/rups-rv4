@@ -7,7 +7,7 @@ export type GameButtonProps = {
   type: GameButtonType;
   onClick: () => void;
   disabled?: boolean;
-  label?: Exclude<ReactNode, boolean | null | undefined>;
+  label?: ReactNode;
 };
 
 const GameButton = ({ type, onClick, disabled = false, label }: GameButtonProps) => {
