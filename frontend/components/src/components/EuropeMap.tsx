@@ -188,6 +188,15 @@ const EuropeMap = ({ ref, ...props }: EuropeMapProps) => {
           .setLngLat(lngLat)
           .setText(content)
           .addTo(mapInstance.current);
+          
+        const popupElement = popup.getElement();
+        popupElement.addEventListener('mouseenter', () => {
+          popupElement.style.zIndex = '10';
+        });
+        popupElement.addEventListener('mouseleave', () => {
+          popupElement.style.zIndex = '';
+        });
+
         popups.current.push(popup);
         return popup;
       },
