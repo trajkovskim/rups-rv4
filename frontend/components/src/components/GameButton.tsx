@@ -62,8 +62,7 @@ const GameButton = ({ type, onClick, disabled = false, label }: GameButtonProps)
     </>
   );
 
-  const variantClass = type === 'back' ? '' : styles[type === 'new-game' ? 'newGame' : type];
-
+  const variantClass = type === 'new-game' ? styles.newGame : styles[type];
   return (
     <button
       className={`${styles.button} ${variantClass} ${hasLabel ? styles.withLabel : ''}`}

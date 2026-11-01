@@ -7,6 +7,7 @@ export type QuestionResult = {
   submittedAnswer: ReactNode;
   correctAnswer: ReactNode;
   isCorrect: boolean;
+  pointsEarned?: number;
 };
 
 export type ResultSummaryContent = {
@@ -92,7 +93,7 @@ const ResultSummary = ({
                 </p>
               )}
               <div className={styles.cardScore}>
-                <strong>{result.isCorrect ? pointsPerCorrectAnswer : 0}</strong>
+                <strong>{result.pointsEarned ?? (result.isCorrect ? pointsPerCorrectAnswer : 0)}</strong>
                 <span>{content.pointsUnit}</span>
               </div>
               <div className={styles.cardProgress}>

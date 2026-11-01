@@ -103,5 +103,7 @@ npm run typecheck
 npm run lint
 ```
 
-`npm run demo` starts the example app. `npm run build` generates an ESM bundle
-and TypeScript declarations in `dist/`.
+`npm run demo` starts the component gallery. It demonstrates every exported
+component, including interactive examples for the map, dialogs, question flow,
+and results. `npm run build` generates an ESM bundle and TypeScript declarations
+in `dist/`.
