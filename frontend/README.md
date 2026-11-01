@@ -20,8 +20,13 @@ npm run build
 npm run ui
 ```
 
+.env.local
+```bash
+NEXT_PUBLIC_USE_MOCK_QUESTIONS=false
+NEXT_PUBLIC_USE_MOCK_GEO=false
+NEXT_PUBLIC_API_URL=http://localhost:8080/api
+```
+
 Nato odpri [http://localhost:3000](http://localhost:3000).
 
 Če si repozitorij samo posodobil (`git pull`), zaženi `npm install` v mapi `mock` še enkrat, ker so lahko vmes prišle nove odvisnosti.
-
-
