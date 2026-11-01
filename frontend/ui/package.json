@@ -1,0 +1,12 @@
+{
+  "name": "@meridiani/frontend",
+  "version": "1.0.0",
+  "main": "server.js",
+  "private": true,
+  "dependencies": {
+    "@meridiani/map-component": "^1.0.0"
+  },
+  "devDependencies": {
+    "@types/geojson": "^7946.0.16"
+  }
+}
