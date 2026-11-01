@@ -5,6 +5,7 @@ import type {
   LngLat,
   Question,
   QuestionAnswerFeedback,
+  QuestionType,
 } from './types';
 
 const isRecord = (value: unknown): value is Record<string, unknown> =>
@@ -62,8 +63,8 @@ export const checkQuestionAnswer = async (
   };
 };
 
-export const getQuestionsForGameMode = async (gameModeId: number): Promise<Question[]> => {
-  const query = new URLSearchParams({ gameModeId: String(gameModeId) });
+export const getQuestionsForType = async (type: QuestionType): Promise<Question[]> => {
+  const query = new URLSearchParams({ type });
   const data = await requestJson(`/questions?${query}`);
 
   if (!Array.isArray(data) || !data.every(isQuestion)) {
@@ -73,8 +74,11 @@ export const getQuestionsForGameMode = async (gameModeId: number): Promise<Quest
   return data;
 };
 
-export const getLeaderboard = async (): Promise<LeaderboardEntry[]> => {
-  const data = await requestJson('/leaderboard');
+export const getLeaderboard = async (
+  gameModeId: number,
+): Promise<LeaderboardEntry[]> => {
+  const query = new URLSearchParams({ gameModeId: String(gameModeId) });
+  const data = await requestJson(`/leaderboard?${query}`);
 
   if (!Array.isArray(data) || !data.every(isLeaderboardEntry)) {
     throw new TypeError('Invalid leaderboard returned by the API');

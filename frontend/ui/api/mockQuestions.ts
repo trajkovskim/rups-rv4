@@ -1,3 +1,4 @@
+import { QuestionType } from "./types";
 import type {
   CheckQuestionAnswer,
   LeaderboardEntry,
@@ -7,14 +8,14 @@ import type {
 } from "./types";
 
 type MockQuestion = Question & {
-  gameModeId: number;
+  type: QuestionType;
   correctAnswer: LngLat;
 };
 
 const MOCK_QUESTIONS: readonly MockQuestion[] = [
   {
     id: 101,
-    gameModeId: 1,
+    type: QuestionType.CITIES,
     prompt: "Which city is the capital of France?",
     hint: "Look in northern France, near the Seine.",
     fact: "Paris is home to the Eiffel Tower and the Louvre.",
@@ -22,7 +23,7 @@ const MOCK_QUESTIONS: readonly MockQuestion[] = [
   },
   {
     id: 102,
-    gameModeId: 1,
+    type: QuestionType.CITIES,
     prompt: "Which city is the capital of capital of Hungary?",
     hint: "Look along the Danube in central Europe.",
     fact: "Buda and Pest became one city in 1873.",
@@ -30,7 +31,7 @@ const MOCK_QUESTIONS: readonly MockQuestion[] = [
   },
   {
     id: 103,
-    gameModeId: 1,
+    type: QuestionType.CITIES,
     prompt: "Which city is the capital of Slovenia?",
     hint: "Look between the Alps and the Adriatic Sea.",
     fact: "Ljubljana's dragon is a well-known symbol of the city",
@@ -38,7 +39,7 @@ const MOCK_QUESTIONS: readonly MockQuestion[] = [
   },
   {
     id: 201,
-    gameModeId: 2,
+    type: QuestionType.COUNTRIES,
     prompt: "Select a point inside Portugal.",
     hint: "Find the country on the western edge of the Iberian Peninsula.",
     fact: "Portugal is the westernmost country on mainland Europe.",
@@ -46,7 +47,7 @@ const MOCK_QUESTIONS: readonly MockQuestion[] = [
   },
   {
     id: 202,
-    gameModeId: 2,
+    type: QuestionType.COUNTRIES,
     prompt: "Select a point inside France.",
     hint: "Look west of Germany and north of Spain.",
     fact: "Mainland France is often called the Hexagon because of its shape.",
@@ -54,7 +55,7 @@ const MOCK_QUESTIONS: readonly MockQuestion[] = [
   },
   {
     id: 203,
-    gameModeId: 2,
+    type: QuestionType.COUNTRIES,
     prompt: "Select a point inside Croatia.",
     hint: "Look along the Adriatic Sea, east of Italy.",
     fact: "Croatia has more than a thousand islands along its Adriatic coast.",
@@ -62,7 +63,7 @@ const MOCK_QUESTIONS: readonly MockQuestion[] = [
   },
   {
     id: 301,
-    gameModeId: 3,
+    type: QuestionType.HISTORY,
     prompt:
       "Find Sarajevo, where the 1914 assassination helped trigger World War I.",
     hint: "Look in Bosnia and Herzegovina.",
@@ -71,7 +72,7 @@ const MOCK_QUESTIONS: readonly MockQuestion[] = [
   },
   {
     id: 302,
-    gameModeId: 3,
+    type: QuestionType.HISTORY,
     prompt: "Find Pompeii, the ancient city buried by Mount Vesuvius.",
     hint: "Look near Naples in southern Italy.",
     fact: "The eruption of Mount Vesuvius buried Pompeii in AD 79.",
@@ -79,7 +80,7 @@ const MOCK_QUESTIONS: readonly MockQuestion[] = [
   },
   {
     id: 303,
-    gameModeId: 3,
+    type: QuestionType.HISTORY,
     prompt: "Find Kraków, home to the historic Wawel Castle.",
     hint: "Look in southern Poland, near the Vistula River.",
     fact: "Wawel Castle was once the residence of Polish kings.",
@@ -87,11 +88,23 @@ const MOCK_QUESTIONS: readonly MockQuestion[] = [
   },
 ];
 
-const MOCK_LEADERBOARD: LeaderboardEntry[] = [
-  { name: "Atlas", score: 80, rank: 1 },
-  { name: "Compass", score: 60, rank: 2 },
-  { name: "Globetrotter", score: 40, rank: 3 },
-];
+const MOCK_LEADERBOARDS: Record<number, LeaderboardEntry[]> = {
+  1: [
+    { name: "Atlas", score: 80, rank: 1 },
+    { name: "Compass", score: 60, rank: 2 },
+    { name: "Globetrotter", score: 40, rank: 3 },
+  ],
+  2: [
+    { name: "Compass", score: 90, rank: 1 },
+    { name: "Atlas", score: 70, rank: 2 },
+    { name: "Wayfinder", score: 50, rank: 3 },
+  ],
+  3: [
+    { name: "Wayfinder", score: 100, rank: 1 },
+    { name: "Globetrotter", score: 60, rank: 2 },
+    { name: "Compass", score: 30, rank: 3 },
+  ],
+};
 
 const distanceInKilometers = (first: LngLat, second: LngLat) => {
   const radians = (degrees: number) => (degrees * Math.PI) / 180;
@@ -106,11 +119,11 @@ const distanceInKilometers = (first: LngLat, second: LngLat) => {
   return 6371 * 2 * Math.atan2(Math.sqrt(haversine), Math.sqrt(1 - haversine));
 };
 
-export const getMockQuestionsForGameMode = async (
-  gameModeId: number,
+export const getMockQuestionsForType = async (
+  type: QuestionType,
 ): Promise<Question[]> =>
-  MOCK_QUESTIONS.filter((question) => question.gameModeId === gameModeId).map(
-    ({ gameModeId, correctAnswer, ...question }) => question,
+  MOCK_QUESTIONS.filter((question) => question.type === type).map(
+    ({ id, prompt, hint, fact }) => ({ id, prompt, hint, fact }),
   );
 
 export const checkMockQuestionAnswer = async ({
@@ -134,5 +147,12 @@ export const checkMockQuestionAnswer = async ({
   };
 };
 
-export const getMockLeaderboard = async (): Promise<LeaderboardEntry[]> =>
-  MOCK_LEADERBOARD.map((entry) => ({ ...entry }));
+export const getMockLeaderboard = async (
+  gameModeId: number,
+): Promise<LeaderboardEntry[]> => {
+  const leaderboard = MOCK_LEADERBOARDS[gameModeId];
+  if (!leaderboard) {
+    throw new RangeError(`Mock leaderboard for game mode ${gameModeId} does not exist.`);
+  }
+  return leaderboard.map((entry) => ({ ...entry }));
+};
