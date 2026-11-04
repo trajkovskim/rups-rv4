@@ -1,0 +1,17 @@
+**/node_modules
+**/.next
+**/dist
+**/.env
+**/.env.*
+**/*.log
+**/*.tsbuildinfo
+**/AGENTS.md
+**/CLAUDE*.md
+**/README.md
+
+# Odvisnosti določa samo lock datoteka v tej mapi
+ui/package-lock.json
+components/package-lock.json
+
+Dockerfile
+.dockerignore

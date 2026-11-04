@@ -1,0 +1,7 @@
+# Nastavitve za docker compose
+.env
+
+# Datoteke za AI asistente ne gredo v repozitorij
+.claude/
+CLAUDE*.md
+AGENTS.md
