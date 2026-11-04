@@ -4,6 +4,8 @@ export { default as Card } from './components/Card';
 export type { CardProps } from './components/Card';
 export { default as CardsModal } from './components/CardsModal';
 export type { CardsModalProps } from './components/CardsModal';
+export { default as CountryGuessPanel } from './components/CountryGuessPanel';
+export type { CountryGuessPanelProps } from './components/CountryGuessPanel';
 export { default as EuropeMap } from './components/EuropeMap';
 export type {
   EuropeMapClickEvent,

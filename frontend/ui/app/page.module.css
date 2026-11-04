@@ -53,7 +53,8 @@
   gap: 0.75rem;
 }
 
-.activeMode {
+.activeMode,
+.stopwatch {
   padding: 0.7rem 1rem;
   border: var(--border-glass);
   border-radius: 999px;
@@ -62,6 +63,10 @@
   color: var(--color-text-strong);
   font-size: 0.85rem;
   font-weight: 750;
+}
+
+.stopwatch {
+  font-variant-numeric: tabular-nums;
 }
 
 .pauseActions {
@@ -165,6 +170,11 @@
     font-size: 0.75rem;
     text-overflow: ellipsis;
     white-space: nowrap;
+  }
+
+  /* Ob štoparici je premalo prostora še za ime načina, gumbi bi prekrili rezultat */
+  .activeMode:has(+ .stopwatch) {
+    display: none;
   }
 
   .projectFooter {

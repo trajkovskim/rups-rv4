@@ -35,6 +35,20 @@ export interface QuestionAnswerFeedback {
   points: number;
 }
 
+export interface CountryGuessQuestion extends Question {
+  mapCountries: string[];
+}
+
+export interface CheckCountryGuess {
+  questionId: number;
+  answer: string;
+}
+
+export interface CountryGuessFeedback {
+  isCorrect: boolean;
+  correctAnswer: string;
+}
+
 export enum QuestionType {
   COUNTRIES = 'countries',
   CITIES = 'cities',

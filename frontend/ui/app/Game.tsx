@@ -10,6 +10,7 @@ import type {
 import {
   Card,
   CardsModal,
+  CountryGuessPanel,
   EuropeMap,
   FloatingPanel,
   GameButton,
@@ -27,9 +28,10 @@ import type {
   ResultSummaryContent,
 } from '@meridiani/components';
 import { getBundledMapGeoData } from '@/api/apiGeoService';
+import { checkCountryGuess, getCountryGuessQuestions } from '@/service/countryGuessService';
 import { getMapGeoData } from '@/service/geoService';
 import { checkQuestionAnswer, getLeaderboard, getQuestionsForType } from '@/service/questionsService';
-import { formatCoordinates, formatPlaceName, gameText } from './gameText';
+import { formatCoordinates, formatPlaceName, formatTime, gameText } from './gameText';
 import { GAME_MODES, type GameMode, type GamePhase, type QuestionResult, useGame } from './useGame';
 import AppLoadingSpinner from './AppLoadingSpinner';
 import PointsAward from './PointsAward';
@@ -46,13 +48,20 @@ const RESULT_SUMMARY_CONTENT: ResultSummaryContent = {
   ...gameText.results,
   correctAnswerLabel: (answer) => gameText.results.correctAnswerLabel(String(answer)),
 };
-const LEADERBOARD_TABS = GAME_MODES.map(({ id, name }) => ({
+const COUNTRY_GUESS_SUMMARY_CONTENT: ResultSummaryContent = {
+  ...RESULT_SUMMARY_CONTENT,
+  ...gameText.countryGuess.results,
+};
+// Lestvice so po točkah, igra Ugotovi državo pa za zdaj rezultatov še ne shranjuje
+const LEADERBOARD_TABS = GAME_MODES.filter((mode) => mode.kind === 'map').map(({ id, name }) => ({
   id: String(id),
   label: name,
 }));
 
 const currentPlayer = gameText.playerName;
 const pointsPerCorrectAnswer = 10;
+const pointsPerCountryHit = 1;
+const STOPWATCH_INTERVAL_MS = 100;
 const DEFAULT_DISPLAY: EuropeMapDisplay = { country: true };
 
 const errorMessage = (error: unknown) => (error instanceof Error ? error.message : gameText.errors.unknown);
@@ -96,6 +105,13 @@ function Game() {
   const isQuizComplete = game.phase === 'completed';
   const isPaused = game.phase === 'paused';
   const isModalOpen = game.phase === 'selecting' || isPaused;
+  const isCountryGuess = game.activeMode?.kind === 'countryGuess';
+  const isCountryGuessRunning = isCountryGuess && game.phase === 'started';
+  const highlightedCountries =
+    (isCountryGuessRunning || (isCountryGuess && isPaused)) && currentQuestion && 'mapCountries' in currentQuestion
+      ? currentQuestion.mapCountries
+      : null;
+  const lastResult = game.questionResults[game.questionResults.length - 1];
   const notices = [mapError, activeLeaderboardError, game.error].filter(
     (notice): notice is string => notice !== null,
   );
@@ -123,7 +139,13 @@ function Game() {
   };
 
   const back = () => resetGame('ready');
-  const stop = () => resetGame('ready');
+  const stop = () => {
+    if (isCountryGuess) {
+      dispatch({ type: 'phase', phase: 'completed' });
+      return;
+    }
+    resetGame('ready');
+  };
   const newGame = () => resetGame('selecting');
   const pause = () => dispatch({ type: 'phase', phase: 'paused' });
   const resume = () => dispatch({ type: 'phase', phase: 'started' });
@@ -133,7 +155,7 @@ function Game() {
     const requestId = ++modeRequestId.current;
     dispatch({ type: 'loading', modeId: mode.id });
     try {
-      const questions = await getQuestionsForType(mode.type);
+      const questions = mode.kind === 'countryGuess' ? await getCountryGuessQuestions() : await getQuestionsForType(mode.type);
       if (requestId !== modeRequestId.current) return;
       if (questions.length === 0) {
         dispatch({ type: 'error', message: gameText.errors.noQuestions });
@@ -155,7 +177,7 @@ function Game() {
   };
 
   const selectMapLocation = (data: EuropeMapClickEvent) => {
-    if (game.phase !== 'started' || isAnswerSubmitted || checkingAnswer.current) {
+    if (game.phase !== 'started' || isCountryGuess || isAnswerSubmitted || checkingAnswer.current) {
       return;
     }
     const coordinates = { lng: data.lngLat.lng, lat: data.lngLat.lat };
@@ -244,6 +266,70 @@ function Game() {
     clearMap();
     dispatch({ type: 'nextQuestion' });
   };
+
+  const answerCountryGuess = async (answer: string) => {
+    if (!isCountryGuessRunning || !currentQuestion || checkingAnswer.current) return;
+
+    checkingAnswer.current = true;
+    const requestId = ++answerRequestId.current;
+    dispatch({ type: 'error', message: null });
+    try {
+      const result = await checkCountryGuess({ questionId: currentQuestion.id, answer });
+      if (requestId !== answerRequestId.current) return;
+
+      // Napačen poskus ne konča vprašanja; igralec lahko poskuša znova ali gre naprej
+      if (answer && !result.isCorrect) {
+        dispatch({ type: 'wrongGuess', answer });
+        return;
+      }
+
+      const lastAttempt = result.isCorrect ? answer : game.selectedAnswer;
+      dispatch({
+        type: 'submitAnswer',
+        feedback: result.isCorrect ? 'correct' : 'incorrect',
+        result: {
+          prompt: currentQuestion.prompt,
+          submittedAnswer: lastAttempt
+            ? gameText.countryGuess.submittedAnswer(lastAttempt)
+            : gameText.countryGuess.skippedAnswer,
+          correctAnswer: result.correctAnswer,
+          isCorrect: result.isCorrect,
+          pointsEarned: result.isCorrect ? pointsPerCountryHit : 0,
+        },
+      });
+      dispatch(
+        game.questionIndex === game.questions.length - 1
+          ? { type: 'phase', phase: 'completed' }
+          : { type: 'nextQuestion' },
+      );
+    } catch (error) {
+      if (requestId === answerRequestId.current) {
+        dispatch({
+          type: 'error',
+          message: gameText.errors.checkAnswer(errorMessage(error)),
+        });
+      }
+    } finally {
+      if (requestId === answerRequestId.current) {
+        checkingAnswer.current = false;
+      }
+    }
+  };
+
+  useEffect(() => {
+    if (!isCountryGuessRunning) return;
+    let lastTick = Date.now();
+    const interval = setInterval(() => {
+      const now = Date.now();
+      dispatch({ type: 'tick', milliseconds: now - lastTick });
+      lastTick = now;
+    }, STOPWATCH_INTERVAL_MS);
+    return () => clearInterval(interval);
+  }, [isCountryGuessRunning, dispatch]);
+
+  useEffect(() => {
+    mapRef.current?.highlightCountries(highlightedCountries);
+  }, [highlightedCountries]);
 
   useEffect(() => {
     const controller = new AbortController();
@@ -341,10 +427,15 @@ function Game() {
               points={game.points}
               correctAnswers={game.correctAnswers}
               totalQuestions={game.questions.length}
-              pointsPerCorrectAnswer={pointsPerCorrectAnswer}
+              pointsPerCorrectAnswer={isCountryGuess ? pointsPerCountryHit : pointsPerCorrectAnswer}
               questionResults={game.questionResults}
               onReplay={newGame}
-              content={RESULT_SUMMARY_CONTENT}
+              content={isCountryGuess ? COUNTRY_GUESS_SUMMARY_CONTENT : RESULT_SUMMARY_CONTENT}
+              stat={
+                isCountryGuess
+                  ? { label: gameText.countryGuess.timeLabel, value: formatTime(game.elapsedMs) }
+                  : undefined
+              }
             />
           )}
         </Overlay>
@@ -378,6 +469,11 @@ function Game() {
       {gameState === 'started' && (
         <FloatingPanel position="top-left" priority="high" className={styles.gameControls}>
           <span className={styles.activeMode}>{game.activeMode?.name}</span>
+          {isCountryGuess && (
+            <span className={styles.stopwatch} role="timer" aria-label={gameText.countryGuess.timeLabel}>
+              {formatTime(game.elapsedMs)}
+            </span>
+          )}
           <GameButton type="pause" label={gameText.controls.pause} hover onClick={pause} />
           <GameButton type="stop" label={gameText.controls.stop} hover onClick={stop} />
         </FloatingPanel>
@@ -385,12 +481,40 @@ function Game() {
       {game.activeMode && (
         <>
           {!isQuizComplete && (
-            <PlayerScore name={currentPlayer} points={game.points} pointsLabel={gameText.playerPointsLabel} />
+            <PlayerScore
+              name={currentPlayer}
+              points={game.points}
+              pointsLabel={isCountryGuess ? gameText.countryGuess.hitsLabel : gameText.playerPointsLabel}
+            />
           )}
-          {isAnswerSubmitted && (
+          {isAnswerSubmitted && !isCountryGuess && (
             <PointsAward points={game.questionResults[game.questionIndex].pointsEarned} />
           )}
-          {gameState === 'started' && (
+          {isCountryGuessRunning && currentQuestion && (
+            <FloatingPanel position="bottom-center">
+              <CountryGuessPanel
+                key={currentQuestion.id}
+                prompt={currentQuestion.prompt}
+                questionLabel={gameText.countryGuess.label(game.questionIndex + 1, game.questions.length)}
+                inputLabel={gameText.countryGuess.inputLabel}
+                placeholder={gameText.countryGuess.placeholder}
+                skipLabel={gameText.countryGuess.skipLabel}
+                wrongAnswer={game.selectedAnswer}
+                wrongAnswerMessage={gameText.countryGuess.wrongAnswer}
+                previousResult={
+                  lastResult && {
+                    isCorrect: lastResult.isCorrect,
+                    message: lastResult.isCorrect
+                      ? gameText.countryGuess.previousCorrect(String(lastResult.correctAnswer))
+                      : gameText.countryGuess.previousSkipped(String(lastResult.correctAnswer)),
+                  }
+                }
+                onSubmit={(answer) => void answerCountryGuess(answer)}
+                onSkip={() => void answerCountryGuess('')}
+              />
+            </FloatingPanel>
+          )}
+          {gameState === 'started' && !isCountryGuess && (
             <FloatingPanel position="bottom-center">
               <QuestionPanel
                 question={currentQuestion}
@@ -404,7 +528,7 @@ function Game() {
           )}
         </>
       )}
-      {(!game.activeMode || isQuizComplete) && (
+      {(!game.activeMode || (isQuizComplete && !isCountryGuess)) && (
         <Leaderboards
           entries={leaderboards}
           currentPlayerName={currentPlayer}
