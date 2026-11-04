@@ -16,6 +16,11 @@ export const gameText = {
       description: 'Odkrij države in njihove regije.',
       icon: '🗺️',
     },
+    guessCountry: {
+      name: 'Ugotovi državo',
+      description: 'Na zemljevidu je označena država. Čim hitreje vpiši njeno ime.',
+      icon: '⏱️',
+    },
     startAction: 'Začni igrati',
     loadingAction: 'Nalaganje vprašanj…',
     actionArrow: '→',
@@ -60,6 +65,27 @@ export const gameText = {
     checkingAnswerLabel: 'Preverjanje odgovora…',
     submitLabel: 'Oddaj odgovor',
     nextLabel: 'Naslednje vprašanje',
+  },
+  countryGuess: {
+    label: (questionNumber: number, totalQuestions: number) => `Država ${questionNumber} od ${totalQuestions}`,
+    inputLabel: 'Ime označene države',
+    placeholder: 'Vpiši ime države',
+    skipLabel: 'Naprej',
+    wrongAnswer: 'To ni prava država. Poskusi znova ali pojdi naprej.',
+    previousCorrect: (country: string) => `Pravilno: ${country}`,
+    previousSkipped: (country: string) => `Prejšnji odgovor: ${country}`,
+    skippedAnswer: 'Brez odgovora',
+    submittedAnswer: (answer: string) => `Tvoj odgovor: ${answer}`,
+    hitsLabel: 'Zadetki',
+    timeLabel: 'Čas',
+    results: {
+      pointsLabel: (totalQuestions: number) => `od ${totalQuestions} zadetkov`,
+      resultMessage: (correctAnswers: number, totalQuestions: number, percentage: number) =>
+        percentage === 100
+          ? 'Odlično — prepoznal si vse države.'
+          : `Prepoznal si ${correctAnswers} od ${totalQuestions} držav.`,
+      pointsUnit: 'od 1',
+    },
   },
   errors: {
     unknown: 'Prišlo je do napake. Poskusi znova.',
@@ -113,6 +139,12 @@ export const gameText = {
     description: 'Šolski projekt',
   },
 } as const;
+
+export const formatTime = (milliseconds: number) => {
+  const totalSeconds = Math.floor(milliseconds / 1000);
+  const seconds = String(totalSeconds % 60).padStart(2, '0');
+  return `${Math.floor(totalSeconds / 60)}:${seconds}`;
+};
 
 export const formatCoordinates = ({ lng, lat }: LngLat) => `${lat.toFixed(2)}, ${lng.toFixed(2)}`;
 

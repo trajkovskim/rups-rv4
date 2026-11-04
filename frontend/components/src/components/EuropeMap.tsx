@@ -6,21 +6,26 @@ import {
   Popup,
   LngLatBounds,
   type Point,
+  type FilterSpecification,
   type LayerSpecification,
   type LngLat,
 } from 'maplibre-gl';
 
 export const EUROPE_BOUNDARIES = new LngLatBounds([-25.0, 34.0], [45.0, 71.5]);
+const EUROPE_CENTER: [number, number] = [10.4515, 51.1657];
+const EUROPE_ZOOM = 4;
+const NOTHING_FILTER: FilterSpecification = ['==', ['get', 'country'], ''];
 
 import 'maplibre-gl/dist/maplibre-gl.css';
 
-import type { FeatureCollection, GeoJsonProperties, Geometry } from 'geojson';
+import type { Feature, FeatureCollection, GeoJsonProperties, Geometry, Position } from 'geojson';
 
 export interface EuropeMapRefHandle {
   remove: (r: Marker | Popup) => void;
   addMarker: (lngLat: LngLat) => Marker | null;
   addPopup: (lngLat: LngLat, content: string) => Popup | null;
   clear: () => void;
+  highlightCountries: (countries: string[] | null) => void;
 }
 
 export type EuropeMapClickEvent = {
@@ -37,6 +42,8 @@ export type EuropeMapDisplay = {
   city?: boolean;
   state?: boolean;
   navigation?: boolean;
+  // Skrije še ostale napise (manjši kraji, ceste, točke), da zemljevid ne izda odgovora
+  hideOtherLabels?: boolean;
 };
 
 type MapProps = {
@@ -58,15 +65,44 @@ const updateSymbolVisibility = (map: MapGL, layer: LayerSpecification, display: 
     return;
   }
 
-  for (const layerType of ['city', 'country', 'village', 'water', 'state']) {
-    if (layer.id.includes(layerType)) {
-      map.setLayoutProperty(
-        layer.id,
-        'visibility',
-        display?.[layerType as keyof MapProps['display']] ? 'visible' : 'none',
-      );
-    }
+  const layerTypes = ['city', 'country', 'village', 'water', 'state'] as const;
+  const matchingTypes = layerTypes.filter((layerType) => layer.id.includes(layerType));
+
+  for (const layerType of matchingTypes) {
+    map.setLayoutProperty(layer.id, 'visibility', display?.[layerType] ? 'visible' : 'none');
   }
+
+  if (matchingTypes.length === 0) {
+    map.setLayoutProperty(layer.id, 'visibility', display?.hideOtherLabels ? 'none' : 'visible');
+  }
+};
+
+const ringArea = (ring: Position[]) =>
+  Math.abs(
+    ring.reduce((sum, [lng, lat], index) => {
+      const [nextLng, nextLat] = ring[(index + 1) % ring.length];
+      return sum + lng * nextLat - nextLng * lat;
+    }, 0),
+  ) / 2;
+
+// Samo največji del države, da čezmorska ozemlja (npr. Francije) ne odmaknejo pogleda iz Evrope
+const countryBounds = (feature: Feature<Geometry, GeoJsonProperties>): LngLatBounds | null => {
+  const { geometry } = feature;
+  if (geometry.type !== 'Polygon' && geometry.type !== 'MultiPolygon') {
+    return null;
+  }
+  const polygons = geometry.type === 'Polygon' ? [geometry.coordinates] : geometry.coordinates;
+  const mainland = polygons.reduce((largest, polygon) =>
+    ringArea(polygon[0]) > ringArea(largest[0]) ? polygon : largest,
+  );
+  const bounds = new LngLatBounds();
+  for (const [lng, lat] of mainland[0]) {
+    bounds.extend([
+      Math.min(Math.max(lng, EUROPE_BOUNDARIES.getWest()), EUROPE_BOUNDARIES.getEast()),
+      Math.min(Math.max(lat, EUROPE_BOUNDARIES.getSouth()), EUROPE_BOUNDARIES.getNorth()),
+    ]);
+  }
+  return bounds;
 };
 
 const createMap = (
@@ -76,8 +112,8 @@ const createMap = (
   const map = new MapGL({
     container: container,
     style: 'https://tiles.openfreemap.org/styles/liberty',
-    center: [10.4515, 51.1657],
-    zoom: 4,
+    center: EUROPE_CENTER,
+    zoom: EUROPE_ZOOM,
     minZoom: 3,
     maxZoom: 10,
     maxBounds: boundaries,
@@ -112,6 +148,22 @@ const createMap = (
       source: 'data',
       paint: { 'fill-color': '#000000', 'fill-opacity': 0 },
     });
+
+    map.addLayer({
+      id: 'highlight-fill',
+      type: 'fill',
+      source: 'data',
+      filter: NOTHING_FILTER,
+      paint: { 'fill-color': '#3264f5', 'fill-opacity': 0.4 },
+    });
+
+    map.addLayer({
+      id: 'highlight-line',
+      type: 'line',
+      source: 'data',
+      filter: NOTHING_FILTER,
+      paint: { 'line-color': '#1d3fb8', 'line-width': 2 },
+    });
   });
 
   return map;
@@ -125,11 +177,14 @@ const EuropeMap = ({ ref, ...props }: EuropeMapProps) => {
   const markers = useRef<Marker[]>([]);
   const popups = useRef<Popup[]>([]);
   const handlersRef = useRef({ onClick, onLoaded });
+  const geojsonRef = useRef(geojson);
+  const hasHighlight = useRef(false);
 
   useEffect(() => {
     handlersRef.current.onClick = onClick;
     handlersRef.current.onLoaded = onLoaded;
-  }, [onClick, onLoaded]);
+    geojsonRef.current = geojson;
+  }, [onClick, onLoaded, geojson]);
 
   useEffect(() => {
     if (mapContainer.current && !mapInstance.current) {
@@ -178,6 +233,42 @@ const EuropeMap = ({ ref, ...props }: EuropeMapProps) => {
         popups.current.forEach((popup) => popup.remove());
         markers.current = [];
         popups.current = [];
+      },
+      highlightCountries: (countries) => {
+        const map = mapInstance.current;
+        if (!map?.getLayer('highlight-fill')) {
+          return;
+        }
+
+        const filter: FilterSpecification = countries
+          ? ['in', ['get', 'country'], ['literal', countries]]
+          : NOTHING_FILTER;
+        map.setFilter('highlight-fill', filter);
+        map.setFilter('highlight-line', filter);
+
+        if (!countries) {
+          if (hasHighlight.current) {
+            map.easeTo({ center: EUROPE_CENTER, zoom: EUROPE_ZOOM });
+          }
+          hasHighlight.current = false;
+          return;
+        }
+
+        hasHighlight.current = true;
+        const bounds = new LngLatBounds();
+        for (const feature of geojsonRef.current.features) {
+          if (countries.includes(feature.properties?.country)) {
+            const featureBounds = countryBounds(feature);
+            if (featureBounds) bounds.extend(featureBounds);
+          }
+        }
+        if (!bounds.isEmpty()) {
+          map.fitBounds(bounds, {
+            padding: { top: 90, bottom: 190, left: 50, right: 50 },
+            maxZoom: 7,
+            duration: 600,
+          });
+        }
       },
       addPopup: (lngLat, content) => {
         if (!mapInstance.current) {

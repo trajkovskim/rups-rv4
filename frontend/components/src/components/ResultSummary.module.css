@@ -37,6 +37,25 @@
   font-size: 0.95rem;
 }
 
+.stat {
+  display: inline-flex;
+  align-items: baseline;
+  gap: 0.5rem;
+  margin: 1rem 0 0;
+  padding: 0.45rem 1rem;
+  border-radius: 999px;
+  background: rgb(40 45 55 / 8%);
+  color: #626873;
+  font-size: 0.85rem;
+}
+
+.stat strong {
+  color: #111;
+  font-size: 1.25rem;
+  font-weight: 850;
+  font-variant-numeric: tabular-nums;
+}
+
 .resultMessage {
   margin: 1.4rem 0 0;
   color: #424a56;

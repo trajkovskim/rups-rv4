@@ -32,6 +32,7 @@ export type ResultSummaryProps = {
   questionResults: QuestionResult[];
   onReplay: () => void;
   content: ResultSummaryContent;
+  stat?: { label: ReactNode; value: ReactNode };
 };
 
 const ResultSummary = ({
@@ -42,6 +43,7 @@ const ResultSummary = ({
   questionResults,
   onReplay,
   content,
+  stat,
 }: ResultSummaryProps) => {
   const percentage = totalQuestions === 0 ? 0 : Math.round((correctAnswers / totalQuestions) * 100);
   const maximumPoints = totalQuestions * pointsPerCorrectAnswer;
@@ -52,6 +54,12 @@ const ResultSummary = ({
         <p className={styles.eyebrow}>{content.heading}</p>
         <h1 className={styles.points}>{points}</h1>
         <p className={styles.pointsLabel}>{content.pointsLabel(maximumPoints)}</p>
+        {stat && (
+          <p className={styles.stat}>
+            <span>{stat.label}</span>
+            <strong>{stat.value}</strong>
+          </p>
+        )}
         <p className={styles.resultMessage}>{content.resultMessage(correctAnswers, totalQuestions, percentage)}</p>
       </header>
 
