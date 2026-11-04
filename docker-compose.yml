@@ -1,7 +1,6 @@
 name: meridiani
 
 services:
-  # Baza za razvoj. Backend in frontend pridejo sem v ločenem ticketu za dockerizacijo.
   db:
     image: postgres:17-alpine
     restart: unless-stopped
@@ -19,6 +18,43 @@ services:
       interval: 5s
       timeout: 3s
       retries: 10
+
+  backend:
+    build: ./backend
+    restart: unless-stopped
+    depends_on:
+      db:
+        condition: service_healthy
+    environment:
+      DATABASE_URL: postgres://${POSTGRES_USER:-meridiani}:${POSTGRES_PASSWORD:-meridiani}@db:5432/${POSTGRES_DB:-meridiani}
+      PORT: 8080
+      CORS_ORIGIN: ${CORS_ORIGIN:-http://localhost:3000}
+    ports:
+      - "${BACKEND_PORT:-8080}:8080"
+    healthcheck:
+      # Uspe šele, ko so migracije in seed končani, ker bere vprašanja iz baze
+      test:
+        - CMD
+        - node
+        - -e
+        - "fetch('http://localhost:8080/api/questions?type=cities').then((r) => process.exit(r.ok ? 0 : 1)).catch(() => process.exit(1))"
+      interval: 5s
+      timeout: 3s
+      retries: 12
+      start_period: 10s
+
+  frontend:
+    build:
+      context: ./frontend
+      args:
+        # Naslov, ki ga kliče brskalnik, zato ne more biti ime storitve backend
+        NEXT_PUBLIC_API_URL: ${PUBLIC_API_URL:-http://localhost:8080/api}
+    restart: unless-stopped
+    depends_on:
+      backend:
+        condition: service_healthy
+    ports:
+      - "${FRONTEND_PORT:-3000}:3000"
 
 volumes:
   db-data:

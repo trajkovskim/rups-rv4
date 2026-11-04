@@ -1,7 +1,8 @@
 import type { NextConfig } from "next";
 
 const nextConfig: NextConfig = {
-  /* config options here */
+  // Docker sliko sestavimo iz samostojne gradnje, lokalna gradnja ostane nespremenjena
+  output: process.env.NEXT_OUTPUT === "standalone" ? "standalone" : undefined,
   experimental: {
     agentFeedback: true,
   },
