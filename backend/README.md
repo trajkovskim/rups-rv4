@@ -1,6 +1,6 @@
 # Backend
 
-Zaledje igre Meridiani v Node.js in TypeScriptu. Podatki so v bazi PostgreSQL, do katere dostopamo z [Drizzle ORM](https://orm.drizzle.team). Za zdaj vsebuje bazo s tabelo uporabnikov; API na vratih 8080 pride v naslednjih ticketih.
+Zaledje igre Meridiani v Node.js in TypeScriptu. Podatki so v bazi PostgreSQL, do katere dostopamo z [Drizzle ORM](https://orm.drizzle.team). Vsebuje bazo s tabelama uporabnikov in vprašanj ter API na vratih 8080.
 
 ## Zagon baze
 
@@ -20,6 +20,7 @@ Nato v mapi `backend`:
 npm install
 cp .env.example .env
 npm run db:migrate
+npm run db:seed
 npm run db:check
 ```
 
@@ -32,10 +33,31 @@ Povezava deluje: PostgreSQL 17.9
 Tabela users obstaja, uporabnikov: 0
 ```
 
+## Zagon API-ja
+
+Ko baza teče in so migracije ter seed izvedeni, v mapi `backend` zaženi:
+
+```bash
+npm run dev
+```
+
+API je na voljo na `http://localhost:8080/api`.
+
+| Endpoint | Kaj naredi |
+| --- | --- |
+| `GET /api/questions?type=cities\|countries` | Vrne 10 naključnih vprašanj brez pravilnega odgovora |
+| `POST /api/questions/check` | Preveri odgovor ter vrne pravilni odgovor in točke |
+| `GET /api/leaderboard?gameModeId=1` | Za zdaj vrne prazen seznam, ker rezultatov še ne shranjujemo |
+
+Primeri zahtev so v `frontend/ui/api-examples.http`. Frontend lahko API kliče z naslova v `CORS_ORIGIN`, privzeto `http://localhost:3000`.
+
 ## Ukazi
 
 | Ukaz | Kaj naredi |
 | --- | --- |
+| `npm run dev` | Zažene API in ga ob spremembi kode znova naloži |
+| `npm start` | Zažene API brez samodejnega nalaganja |
+| `npm run db:seed` | V bazo vnese vprašanja in obstoječa posodobi, zato ga lahko poženeš večkrat |
 | `npm run db:migrate` | Izvede migracije, ki v bazi še niso izvedene |
 | `npm run db:generate -- --name=opis` | Iz sprememb v `src/db/schema.ts` ustvari novo migracijo v mapi `drizzle` |
 | `npm run db:studio` | Odpre Drizzle Studio, pregledovalnik baze v brskalniku |
@@ -62,6 +84,23 @@ Tabela users obstaja, uporabnikov: 0
 | `password_hash` | text | Samo hash gesla, ki ga naredi API, nikoli geslo |
 | `created_at` | timestamptz | Čas registracije |
 | `updated_at` | timestamptz | Čas zadnje spremembe |
+
+## Tabela `questions`
+
+| Stolpec | Tip | Opomba |
+| --- | --- | --- |
+| `id` | integer | Stalna številka, ki jo določi seed |
+| `category` | enum | Razdelek iz dokumenta z vprašanji, glej spodaj |
+| `prompt` | text | Besedilo vprašanja |
+| `hint` | text | Namig, lahko je prazen |
+| `fact` | text | Zanimivost, prikazana po odgovoru, pri `guess_country` je prazna |
+| `answer` | text | Besedilni odgovor, samo pri `guess_country` |
+| `lng`, `lat` | double precision | Pravilni odgovor, API ga razkrije šele po oddaji |
+| `country` | text | Ime v `src/data/europe.geo.json`, ko je odgovor država |
+
+Vprašanja so v `src/db/seedQuestions.ts`. Igra zaenkrat uporablja samo kategoriji `capitals` (način `cities`) in `countries`. Ostale kategorije so `cities`, `landforms`, `seas`, `islands`, `lakes`, `rivers`, `basins` in `guess_country`. Pri rekah, gorstvih, morjih in povodjih so koordinate le približna točka, zato bodo te kategorije za točkovanje potrebovale prave oblike.
+
+Pri mestih je odgovor pravilen do 30 km od mesta in delno pravilen do 150 km. Pri državah je pravilen klik znotraj meja ali do 30 km od točke, delno pravilen pa do 50 km od meje.
 
 ## Ponastavitev baze
 

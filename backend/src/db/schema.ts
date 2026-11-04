@@ -1,5 +1,15 @@
 import { sql } from "drizzle-orm";
-import { pgTable, text, timestamp, uniqueIndex, uuid, varchar } from "drizzle-orm/pg-core";
+import {
+  doublePrecision,
+  integer,
+  pgEnum,
+  pgTable,
+  text,
+  timestamp,
+  uniqueIndex,
+  uuid,
+  varchar,
+} from "drizzle-orm/pg-core";
 
 export const users = pgTable(
   "users",
@@ -22,5 +32,36 @@ export const users = pgTable(
   ],
 );
 
+export const questionCategory = pgEnum("question_category", [
+  "capitals",
+  "countries",
+  "cities",
+  "landforms",
+  "seas",
+  "islands",
+  "lakes",
+  "rivers",
+  "basins",
+  "guess_country",
+]);
+
+export const questions = pgTable("questions", {
+  // Brez samodejnega štetja, ker seed določi stalne številke vprašanj
+  id: integer("id").primaryKey(),
+  category: questionCategory("category").notNull(),
+  prompt: text("prompt").notNull(),
+  hint: text("hint").notNull(),
+  fact: text("fact").notNull(),
+  // Besedilni odgovor, samo pri vprašanjih iz kategorije guess_country
+  answer: text("answer"),
+  // Pravilni odgovor, ki ga API razkrije šele po oddanem odgovoru
+  lng: doublePrecision("lng").notNull(),
+  lat: doublePrecision("lat").notNull(),
+  // Ime v europe.geo.json, nastavljeno samo, ko je odgovor država
+  country: text("country"),
+});
+
 export type User = typeof users.$inferSelect;
 export type NewUser = typeof users.$inferInsert;
+export type Question = typeof questions.$inferSelect;
+export type NewQuestion = typeof questions.$inferInsert;
