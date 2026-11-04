@@ -23,9 +23,11 @@ npm run ui
 .env.local
 ```bash
 NEXT_PUBLIC_USE_MOCK_QUESTIONS=false
-NEXT_PUBLIC_USE_MOCK_GEO=false
+NEXT_PUBLIC_USE_MOCK_GEO=true
 NEXT_PUBLIC_API_URL=http://localhost:8080/api
 ```
+
+Vprašanja pridejo iz API-ja, zato mora teči backend (navodila so v [backend/README.md](../backend/README.md)). Zemljevid za zdaj ostane na mock podatkih, ker API še nima endpointa `/geojson`. Brez backenda nastavi `NEXT_PUBLIC_USE_MOCK_QUESTIONS=true`.
 
 Nato odpri [http://localhost:3000](http://localhost:3000).
 
