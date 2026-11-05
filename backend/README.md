@@ -48,6 +48,11 @@ API je na voljo na `http://localhost:8080/api`.
 | `GET /api/questions?type=cities\|countries` | Vrne 10 naključnih vprašanj brez pravilnega odgovora |
 | `POST /api/questions/check` | Preveri odgovor ter vrne pravilni odgovor in točke |
 | `GET /api/leaderboard?gameModeId=1` | Za zdaj vrne prazen seznam, ker rezultatov še ne shranjujemo |
+| `POST /api/country-guess/games` | Ustvari igro Ugotovi državo z 10 naključnimi državami |
+| `POST /api/country-guess/games/:id/guess` | Preveri odgovor za trenutno državo, ime razkrije šele pri pravilnem odgovoru |
+| `POST /api/country-guess/games/:id/skip` | Preskoči trenutno državo in razkrije njeno ime |
+| `POST /api/country-guess/games/:id/pause`, `/resume` | Ustavi in nadaljuje merjenje časa |
+| `POST /api/country-guess/games/:id/finish` | Konča igro, tudi predčasno, in vrne zadetke, čas in odigrane države |
 
 Primeri zahtev so v `frontend/ui/api-examples.http`. Frontend lahko API kliče z naslova v `CORS_ORIGIN`, privzeto `http://localhost:3000`.
 
@@ -101,6 +106,18 @@ Primeri zahtev so v `frontend/ui/api-examples.http`. Frontend lahko API kliče z
 Vprašanja so v `src/db/seedQuestions.ts`. Igra zaenkrat uporablja samo kategoriji `capitals` (način `cities`) in `countries`. Ostale kategorije so `cities`, `landforms`, `seas`, `islands`, `lakes`, `rivers`, `basins` in `guess_country`. Pri rekah, gorstvih, morjih in povodjih so koordinate le približna točka, zato bodo te kategorije za točkovanje potrebovale prave oblike.
 
 Pri mestih je odgovor pravilen do 30 km od mesta in delno pravilen do 150 km. Pri državah je pravilen klik znotraj meja ali do 30 km od točke, delno pravilen pa do 50 km od meje.
+
+## Igra Ugotovi državo
+
+Strežnik vodi celotno igro: izbere države, preverja odgovore, šteje zadetke in meri čas brez pavz. Štoparica na frontendu je samo prikaz, končni čas pride iz `finish`.
+
+| Tabela | Kaj hrani |
+| --- | --- |
+| `guess_countries` | Države za ugibanje: `name`, sprejeta druga imena `aliases` in imena v zemljevidu `map_countries`. Seznam je v `src/db/seedGuessCountries.ts` |
+| `country_guess_games` | Ena igra: začetek, konec in čas pavz |
+| `country_guess_rounds` | Države posamezne igre po vrsti, njihov status (`pending`, `correct`, `skipped`) in zadnji odgovor |
+
+Pri preverjanju se ne upoštevajo velike črke, strešice in odvečni presledki. Igralec lahko odgovarja samo na trenutno državo, drugače API vrne 409.
 
 ## Ponastavitev baze
 

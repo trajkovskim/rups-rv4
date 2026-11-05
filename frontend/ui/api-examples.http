@@ -52,6 +52,86 @@ Accept: application/json
 #   { "name": "Globetrotter", "score": 40, "rank": 3 }
 # ]
 
+### Create a country guess game
+POST {{baseUrl}}/country-guess/games
+Content-Type: application/json
+Accept: application/json
+
+{}
+
+# Expected response:
+# {
+#   "id": "13b42dd0-5f3a-454e-9a80-62e09521b845",
+#   "questions": [
+#     {
+#       "id": 36,
+#       "prompt": "Katera država je označena?",
+#       "hint": "",
+#       "fact": "",
+#       "mapCountries": ["Slovenia"]
+#     }
+#   ]
+# }
+
+### Guess the current country
+@gameId = 13b42dd0-5f3a-454e-9a80-62e09521b845
+POST {{baseUrl}}/country-guess/games/{{gameId}}/guess
+Content-Type: application/json
+Accept: application/json
+
+{
+  "questionId": 36,
+  "answer": "Slovenija"
+}
+
+# Expected response (a wrong guess returns isCorrect false and correctAnswer null):
+# {
+#   "isCorrect": true,
+#   "correctAnswer": "Slovenija",
+#   "finished": false
+# }
+
+### Skip the current country
+POST {{baseUrl}}/country-guess/games/{{gameId}}/skip
+Content-Type: application/json
+Accept: application/json
+
+{
+  "questionId": 36
+}
+
+# Expected response:
+# {
+#   "isCorrect": false,
+#   "correctAnswer": "Slovenija",
+#   "finished": false
+# }
+
+### Pause and resume the game clock
+POST {{baseUrl}}/country-guess/games/{{gameId}}/pause
+
+###
+POST {{baseUrl}}/country-guess/games/{{gameId}}/resume
+
+### Finish the game, also early
+POST {{baseUrl}}/country-guess/games/{{gameId}}/finish
+Accept: application/json
+
+# Expected response:
+# {
+#   "hits": 1,
+#   "totalQuestions": 10,
+#   "elapsedMs": 16419,
+#   "rounds": [
+#     {
+#       "questionId": 36,
+#       "correctAnswer": "Slovenija",
+#       "submittedAnswer": "slovenija",
+#       "isCorrect": true
+#     }
+#   ]
+# }
+
 ### Get map GeoJSON
 GET {{baseUrl}}/geojson
 Accept: application/json

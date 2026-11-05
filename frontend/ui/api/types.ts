@@ -39,14 +39,37 @@ export interface CountryGuessQuestion extends Question {
   mapCountries: string[];
 }
 
-export interface CheckCountryGuess {
+export interface CountryGuessGame {
+  id: string;
+  questions: CountryGuessQuestion[];
+}
+
+export interface CountryGuessRound {
+  gameId: string;
   questionId: number;
+}
+
+export interface CheckCountryGuess extends CountryGuessRound {
   answer: string;
 }
 
 export interface CountryGuessFeedback {
   isCorrect: boolean;
-  correctAnswer: string;
+  // Strežnik ime razkrije šele, ko je država uganjena ali preskočena
+  correctAnswer: string | null;
+  finished: boolean;
+}
+
+export interface CountryGuessResult {
+  hits: number;
+  totalQuestions: number;
+  elapsedMs: number;
+  rounds: {
+    questionId: number;
+    correctAnswer: string;
+    submittedAnswer: string | null;
+    isCorrect: boolean;
+  }[];
 }
 
 export enum QuestionType {

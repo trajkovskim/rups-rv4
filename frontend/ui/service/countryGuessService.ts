@@ -1,16 +1,43 @@
 import {
+  checkCountryGuess as checkApiCountryGuess,
+  createCountryGuessGame as createApiCountryGuessGame,
+  finishCountryGuessGame as finishApiCountryGuessGame,
+  pauseCountryGuessGame as pauseApiCountryGuessGame,
+  resumeCountryGuessGame as resumeApiCountryGuessGame,
+  skipCountry as skipApiCountry,
+} from "../api/apiCountryGuessService";
+import {
   checkMockCountryGuess,
-  getMockCountryGuessQuestions,
+  createMockCountryGuessGame,
+  finishMockCountryGuessGame,
+  pauseMockCountryGuessGame,
+  resumeMockCountryGuessGame,
+  skipMockCountry,
 } from "../api/mockCountryGuess";
-import type {
-  CheckCountryGuess,
-  CountryGuessFeedback,
-  CountryGuessQuestion,
-} from "../api/types";
 
-// Za zdaj samo fiksni podatki; API se priklopi tukaj, ko bo igra v bazi
-export const getCountryGuessQuestions = (): Promise<CountryGuessQuestion[]> =>
-  getMockCountryGuessQuestions();
+const service = process.env.NEXT_PUBLIC_USE_MOCK_QUESTIONS === "true"
+  ? {
+      checkCountryGuess: checkMockCountryGuess,
+      createCountryGuessGame: createMockCountryGuessGame,
+      finishCountryGuessGame: finishMockCountryGuessGame,
+      pauseCountryGuessGame: pauseMockCountryGuessGame,
+      resumeCountryGuessGame: resumeMockCountryGuessGame,
+      skipCountry: skipMockCountry,
+    }
+  : {
+      checkCountryGuess: checkApiCountryGuess,
+      createCountryGuessGame: createApiCountryGuessGame,
+      finishCountryGuessGame: finishApiCountryGuessGame,
+      pauseCountryGuessGame: pauseApiCountryGuessGame,
+      resumeCountryGuessGame: resumeApiCountryGuessGame,
+      skipCountry: skipApiCountry,
+    };
 
-export const checkCountryGuess = (guess: CheckCountryGuess): Promise<CountryGuessFeedback> =>
-  checkMockCountryGuess(guess);
+export const {
+  checkCountryGuess,
+  createCountryGuessGame,
+  finishCountryGuessGame,
+  pauseCountryGuessGame,
+  resumeCountryGuessGame,
+  skipCountry,
+} = service;

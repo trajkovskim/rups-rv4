@@ -59,6 +59,7 @@ export type GameData = {
   loadingModeId: number | null;
   error: string | null;
   elapsedMs: number;
+  countryGuessGameId: string | null;
 };
 
 export type GameAction =
@@ -66,7 +67,7 @@ export type GameAction =
   | { type: "phase"; phase: GamePhase }
   | { type: "error"; message: string | null }
   | { type: "loading"; modeId: number | null }
-  | { type: "modeLoaded"; mode: GameMode; questions: GameData["questions"] }
+  | { type: "modeLoaded"; mode: GameMode; questions: GameData["questions"]; countryGuessGameId?: string }
   | { type: "selectAnswer"; coordinates: LngLat; answer: string }
   | {
       type: "submitAnswer";
@@ -75,6 +76,12 @@ export type GameAction =
     }
   | { type: "wrongGuess"; answer: string }
   | { type: "tick"; milliseconds: number }
+  | {
+      type: "countryGuessFinished";
+      hits: number;
+      elapsedMs: number;
+      questionResults: QuestionResult[];
+    }
   | { type: "nextQuestion" };
 
 export const initialGameData = (phase: GamePhase = "ready"): GameData => ({
@@ -91,6 +98,7 @@ export const initialGameData = (phase: GamePhase = "ready"): GameData => ({
   loadingModeId: null,
   error: null,
   elapsedMs: 0,
+  countryGuessGameId: null,
 });
 
 export const gameReducer = (state: GameData, action: GameAction): GameData => {
@@ -109,6 +117,7 @@ export const gameReducer = (state: GameData, action: GameAction): GameData => {
         phase: "started",
         activeMode: action.mode,
         questions: action.questions,
+        countryGuessGameId: action.countryGuessGameId ?? null,
       };
     case "selectAnswer":
       return {
@@ -129,6 +138,15 @@ export const gameReducer = (state: GameData, action: GameAction): GameData => {
       return { ...state, selectedAnswer: action.answer };
     case "tick":
       return { ...state, elapsedMs: state.elapsedMs + action.milliseconds };
+    case "countryGuessFinished":
+      return {
+        ...state,
+        phase: "completed",
+        points: action.hits,
+        correctAnswers: action.hits,
+        elapsedMs: action.elapsedMs,
+        questionResults: action.questionResults,
+      };
     case "nextQuestion":
       return {
         ...state,
