@@ -15,6 +15,10 @@ export const addAuthorization = (accessToken: string): void => {
   globalApiHeaders.set('Authorization', `Bearer ${token}`);
 };
 
+export const clearAuthorization = (): void => {
+  globalApiHeaders.delete('Authorization');
+};
+
 export class ApiError extends Error {
   constructor(
     message: string,
@@ -33,8 +37,10 @@ export const requestJson = async (path: string, init?: RequestInit): Promise<unk
   const response = await fetch(`${API_BASE_URL}${path}`, { ...init, headers });
 
   if (!response.ok) {
+    // Backend napake opiše v polju error, to besedilo je namenjeno uporabniku
+    const body = (await response.json().catch(() => null)) as { error?: unknown } | null;
     throw new ApiError(
-      `API request failed (${response.status} ${response.statusText})`,
+      typeof body?.error === 'string' ? body.error : `API request failed (${response.status} ${response.statusText})`,
       response.status,
       response.statusText,
     );

@@ -11,6 +11,27 @@ export interface LngLat {
   lat: number;
 }
 
+export interface AuthUser {
+  id: string;
+  email: string;
+  username: string;
+  createdAt: string;
+}
+
+export interface AuthResponse {
+  token: string;
+  user: AuthUser;
+}
+
+export interface LoginData {
+  email: string;
+  password: string;
+}
+
+export interface RegistrationData extends LoginData {
+  username: string;
+}
+
 export interface LeaderboardEntry {
   name: string;
   score: number;

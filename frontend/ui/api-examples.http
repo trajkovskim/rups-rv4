@@ -160,3 +160,37 @@ Accept: application/json
 #     }
 #   ]
 # }
+
+### Register a new user
+POST {{baseUrl}}/auth/register
+Content-Type: application/json
+
+{
+  "email": "ucenec@primer.si",
+  "username": "ucenec",
+  "password": "dolgogeslo"
+}
+
+### Log in
+POST {{baseUrl}}/auth/login
+Content-Type: application/json
+
+{
+  "email": "ucenec@primer.si",
+  "password": "dolgogeslo"
+}
+
+# Expected response for register and login:
+# {
+#   "token": "eyJhbGciOi...",
+#   "user": {
+#     "id": "6f1c1f0e-...",
+#     "email": "ucenec@primer.si",
+#     "username": "ucenec",
+#     "createdAt": "2026-11-05T10:00:00.000Z"
+#   }
+# }
+
+### Get the current user
+GET {{baseUrl}}/auth/me
+Authorization: Bearer {{accessToken}}
