@@ -40,7 +40,10 @@ import { getMapGeoData } from '@/service/geoService';
 import { checkQuestionAnswer, getLeaderboard, getQuestionsForType } from '@/service/questionsService';
 import { formatCoordinates, formatPlaceName, formatTime, gameText } from './gameText';
 import { GAME_MODES, type GameMode, type GamePhase, type QuestionResult, useGame } from './useGame';
+import { useAuth } from './useAuth';
+import AccountControls from './AccountControls';
 import AppLoadingSpinner from './AppLoadingSpinner';
+import AuthDialog from './AuthDialog';
 import PointsAward from './PointsAward';
 import styles from './page.module.css';
 
@@ -65,7 +68,6 @@ const LEADERBOARD_TABS = GAME_MODES.filter((mode) => mode.kind === 'map').map(({
   label: name,
 }));
 
-const currentPlayer = gameText.playerName;
 const pointsPerCorrectAnswer = 10;
 const pointsPerCountryHit = 1;
 const STOPWATCH_INTERVAL_MS = 100;
@@ -75,6 +77,8 @@ const errorMessage = (error: unknown) => (error instanceof Error ? error.message
 
 function Game() {
   const [game, dispatch] = useGame();
+  const auth = useAuth();
+  const currentPlayer = auth.user?.username ?? gameText.playerName;
   const mapRef = useRef<EuropeMapRefHandle>(null);
   const gameStateRef = useRef(game.phase);
   const selectedMarker = useRef<Marker | null>(null);
@@ -85,6 +89,7 @@ function Game() {
   const [mapDataVersion, setMapDataVersion] = useState(0);
   const [isMapLoaded, setIsMapLoaded] = useState(false);
   const [isHelpOpen, setIsHelpOpen] = useState(false);
+  const [isAuthOpen, setIsAuthOpen] = useState(false);
   const [leaderboardData, setLeaderboardData] = useState<{
     modeId: number;
     entries: ComponentLeaderboardEntry[];
@@ -525,13 +530,14 @@ function Game() {
         </div>
       )}
       {gameState === 'ready' && !isHelpOpen && (
-        <FloatingPanel position="top-left" priority="high">
+        <FloatingPanel position="top-left" priority="high" className={styles.readyControls}>
           <GameButton
             type="help"
             label={gameText.instructions.eyebrow}
             hover
             onClick={() => setIsHelpOpen(true)}
           />
+          <AccountControls user={auth.user} onLogin={() => setIsAuthOpen(true)} onLogout={auth.logout} />
         </FloatingPanel>
       )}
       {gameState === 'started' && (
@@ -643,6 +649,9 @@ function Game() {
             </Card>
           ))}
       </CardsModal>
+      {isAuthOpen && (
+        <AuthDialog onClose={() => setIsAuthOpen(false)} onLogin={auth.login} onRegister={auth.register} />
+      )}
       <footer className={styles.projectFooter}>
         <strong>{gameText.footer.name}</strong>
         <span>{gameText.footer.description}</span>
