@@ -1,6 +1,7 @@
 import "dotenv/config";
 import cors from "cors";
 import express, { type ErrorRequestHandler } from "express";
+import { authRouter } from "./routes/auth.js";
 import { countryGuessRouter } from "./routes/countryGuess.js";
 import { leaderboardRouter } from "./routes/leaderboard.js";
 import { questionsRouter } from "./routes/questions.js";
@@ -12,6 +13,7 @@ const app = express();
 app.use(cors({ origin: process.env.CORS_ORIGIN ?? "http://localhost:3000" }));
 app.use(express.json());
 
+app.use("/api/auth", authRouter);
 app.use("/api/questions", questionsRouter);
 app.use("/api/leaderboard", leaderboardRouter);
 app.use("/api/country-guess", countryGuessRouter);

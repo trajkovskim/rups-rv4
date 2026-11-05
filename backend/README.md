@@ -45,6 +45,9 @@ API je na voljo na `http://localhost:8080/api`.
 
 | Endpoint | Kaj naredi |
 | --- | --- |
+| `POST /api/auth/register` | Ustvari račun in vrne žeton ter uporabnika |
+| `POST /api/auth/login` | Preveri e-pošto in geslo ter vrne žeton in uporabnika |
+| `GET /api/auth/me` | Vrne prijavljenega uporabnika, potreben je žeton |
 | `GET /api/questions?type=cities\|countries` | Vrne 10 naključnih vprašanj brez pravilnega odgovora |
 | `POST /api/questions/check` | Preveri odgovor ter vrne pravilni odgovor in točke |
 | `GET /api/leaderboard?gameModeId=1` | Za zdaj vrne prazen seznam, ker rezultatov še ne shranjujemo |
@@ -55,6 +58,53 @@ API je na voljo na `http://localhost:8080/api`.
 | `POST /api/country-guess/games/:id/finish` | Konča igro, tudi predčasno, in vrne zadetke, čas in odigrane države |
 
 Primeri zahtev so v `frontend/ui/api-examples.http`. Frontend lahko API kliče z naslova v `CORS_ORIGIN`, privzeto `http://localhost:3000`.
+
+## Prijava in registracija
+
+Registracija sprejme e-pošto, uporabniško ime in geslo:
+
+```http
+POST /api/auth/register
+Content-Type: application/json
+
+{ "email": "ucenec@primer.si", "username": "ucenec", "password": "dolgogeslo" }
+```
+
+Prijava sprejme samo `email` in `password`. Oba endpointa vrneta enak odgovor:
+
+```json
+{
+  "token": "eyJhbGciOi...",
+  "user": {
+    "id": "6f1c1f0e-...",
+    "email": "ucenec@primer.si",
+    "username": "ucenec",
+    "createdAt": "2026-11-05T10:00:00.000Z"
+  }
+}
+```
+
+Žeton velja 7 dni. Pri zaščitenih endpointih ga pošlješ v glavi, na frontendu za to skrbi `addAuthorization`:
+
+```http
+Authorization: Bearer eyJhbGciOi...
+```
+
+Zahteve za vnos:
+
+- e-pošta mora biti veljavna, shrani se z malimi črkami,
+- uporabniško ime ima od 3 do 50 znakov: črke, številke, pike, vezaji in podčrtaji,
+- geslo ima od 8 do 128 znakov, v bazi je shranjen samo njegov hash (argon2).
+
+| Status | Kdaj |
+| --- | --- |
+| `400` | Neveljaven vnos, opis je v polju `error` |
+| `401` | Napačna e-pošta ali geslo, manjkajoč ali neveljaven žeton |
+| `409` | E-pošta ali uporabniško ime že obstaja |
+
+Nov endpoint zaščitiš z middlewarom `requireAuth` iz `src/auth.ts`, id uporabnika je nato v `res.locals.userId`.
+
+Za podpisovanje žetonov je potrebna nastavitev `JWT_SECRET` z vsaj 32 znaki, brez nje se strežnik ne zažene. Vrednost za razvoj je v `.env.example`.
 
 ## Ukazi
 
