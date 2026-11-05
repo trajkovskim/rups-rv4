@@ -68,6 +68,7 @@ export const gameText = {
   },
   countryGuess: {
     label: (questionNumber: number, totalQuestions: number) => `Država ${questionNumber} od ${totalQuestions}`,
+    prompt: 'Katera država je označena?',
     inputLabel: 'Ime označene države',
     placeholder: 'Vpiši ime države',
     skipLabel: 'Naprej',
@@ -95,6 +96,7 @@ export const gameText = {
     noQuestions: 'Za ta način igre še ni na voljo vprašanj.',
     loadQuestions: (error: string) => `Vprašanj ni bilo mogoče naložiti. ${error}`,
     checkAnswer: (error: string) => `Odgovora ni bilo mogoče preveriti. ${error}`,
+    updateGame: (error: string) => `Igre ni bilo mogoče posodobiti. ${error}`,
   },
   feedback: {
     correct: 'Pravilno!',

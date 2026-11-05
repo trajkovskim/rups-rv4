@@ -1,6 +1,7 @@
 import "dotenv/config";
 import cors from "cors";
 import express, { type ErrorRequestHandler } from "express";
+import { countryGuessRouter } from "./routes/countryGuess.js";
 import { leaderboardRouter } from "./routes/leaderboard.js";
 import { questionsRouter } from "./routes/questions.js";
 
@@ -13,6 +14,7 @@ app.use(express.json());
 
 app.use("/api/questions", questionsRouter);
 app.use("/api/leaderboard", leaderboardRouter);
+app.use("/api/country-guess", countryGuessRouter);
 
 const handleError: ErrorRequestHandler = (error, _req, res, _next) => {
   // Napake odjemalca, npr. neveljaven JSON, imajo status že nastavljen

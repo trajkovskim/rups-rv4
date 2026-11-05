@@ -4,6 +4,7 @@ import {
   integer,
   pgEnum,
   pgTable,
+  primaryKey,
   text,
   timestamp,
   uniqueIndex,
@@ -61,7 +62,47 @@ export const questions = pgTable("questions", {
   country: text("country"),
 });
 
+export const guessCountries = pgTable("guess_countries", {
+  // Brez samodejnega štetja, ker seed določi stalne številke držav
+  id: integer("id").primaryKey(),
+  name: text("name").notNull(),
+  // Imena v europe.geo.json, nekatere države so tam razdeljene na več delov
+  mapCountries: text("map_countries").array().notNull(),
+  // Druga sprejeta imena poleg name
+  aliases: text("aliases").array().notNull().default(sql`'{}'::text[]`),
+});
+
+export const countryGuessGames = pgTable("country_guess_games", {
+  id: uuid("id").primaryKey().defaultRandom(),
+  startedAt: timestamp("started_at", { withTimezone: true }).notNull().defaultNow(),
+  // Nastavljen, dokler je igra začasno ustavljena
+  pausedAt: timestamp("paused_at", { withTimezone: true }),
+  // Skupen čas prejšnjih pavz, ki se ne šteje v čas igre
+  pausedMs: integer("paused_ms").notNull().default(0),
+  finishedAt: timestamp("finished_at", { withTimezone: true }),
+});
+
+export const countryGuessRoundStatus = pgEnum("country_guess_round_status", ["pending", "correct", "skipped"]);
+
+export const countryGuessRounds = pgTable(
+  "country_guess_rounds",
+  {
+    gameId: uuid("game_id")
+      .notNull()
+      .references(() => countryGuessGames.id, { onDelete: "cascade" }),
+    position: integer("position").notNull(),
+    countryId: integer("country_id")
+      .notNull()
+      .references(() => guessCountries.id, { onDelete: "cascade" }),
+    status: countryGuessRoundStatus("status").notNull().default("pending"),
+    // Pravilen ali zadnji napačen odgovor igralca
+    lastAnswer: text("last_answer"),
+  },
+  (t) => [primaryKey({ columns: [t.gameId, t.position] })],
+);
+
 export type User = typeof users.$inferSelect;
 export type NewUser = typeof users.$inferInsert;
 export type Question = typeof questions.$inferSelect;
 export type NewQuestion = typeof questions.$inferInsert;
+export type NewGuessCountry = typeof guessCountries.$inferInsert;

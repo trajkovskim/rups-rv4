@@ -28,7 +28,14 @@ import type {
   ResultSummaryContent,
 } from '@meridiani/components';
 import { getBundledMapGeoData } from '@/api/apiGeoService';
-import { checkCountryGuess, getCountryGuessQuestions } from '@/service/countryGuessService';
+import {
+  checkCountryGuess,
+  createCountryGuessGame,
+  finishCountryGuessGame,
+  pauseCountryGuessGame,
+  resumeCountryGuessGame,
+  skipCountry,
+} from '@/service/countryGuessService';
 import { getMapGeoData } from '@/service/geoService';
 import { checkQuestionAnswer, getLeaderboard, getQuestionsForType } from '@/service/questionsService';
 import { formatCoordinates, formatPlaceName, formatTime, gameText } from './gameText';
@@ -141,27 +148,46 @@ function Game() {
   const back = () => resetGame('ready');
   const stop = () => {
     if (isCountryGuess) {
-      dispatch({ type: 'phase', phase: 'completed' });
+      void finishCountryGuess();
       return;
     }
     resetGame('ready');
   };
   const newGame = () => resetGame('selecting');
-  const pause = () => dispatch({ type: 'phase', phase: 'paused' });
-  const resume = () => dispatch({ type: 'phase', phase: 'started' });
+  const pause = async () => {
+    dispatch({ type: 'phase', phase: 'paused' });
+    if (!game.countryGuessGameId) return;
+    try {
+      await pauseCountryGuessGame(game.countryGuessGameId);
+    } catch (error) {
+      dispatch({ type: 'error', message: gameText.errors.updateGame(errorMessage(error)) });
+    }
+  };
+  const resume = async () => {
+    try {
+      if (game.countryGuessGameId) {
+        await resumeCountryGuessGame(game.countryGuessGameId);
+      }
+      dispatch({ type: 'error', message: null });
+      dispatch({ type: 'phase', phase: 'started' });
+    } catch (error) {
+      dispatch({ type: 'error', message: gameText.errors.updateGame(errorMessage(error)) });
+    }
+  };
 
   const selectMode = async (mode: GameMode) => {
     resetGame('selecting');
     const requestId = ++modeRequestId.current;
     dispatch({ type: 'loading', modeId: mode.id });
     try {
-      const questions = mode.kind === 'countryGuess' ? await getCountryGuessQuestions() : await getQuestionsForType(mode.type);
+      const countryGuessGame = mode.kind === 'countryGuess' ? await createCountryGuessGame() : null;
+      const questions = mode.kind === 'countryGuess' ? (countryGuessGame?.questions ?? []) : await getQuestionsForType(mode.type);
       if (requestId !== modeRequestId.current) return;
       if (questions.length === 0) {
         dispatch({ type: 'error', message: gameText.errors.noQuestions });
         return;
       }
-      dispatch({ type: 'modeLoaded', mode, questions });
+      dispatch({ type: 'modeLoaded', mode, questions, countryGuessGameId: countryGuessGame?.id });
     } catch (error) {
       if (requestId === modeRequestId.current) {
         dispatch({
@@ -267,14 +293,36 @@ function Game() {
     dispatch({ type: 'nextQuestion' });
   };
 
-  const answerCountryGuess = async (answer: string) => {
-    if (!isCountryGuessRunning || !currentQuestion || checkingAnswer.current) return;
+  const showCountryGuessResult = async (gameId: string, requestId: number) => {
+    const result = await finishCountryGuessGame(gameId);
+    if (requestId !== answerRequestId.current) return;
+    dispatch({
+      type: 'countryGuessFinished',
+      hits: result.hits,
+      elapsedMs: result.elapsedMs,
+      questionResults: result.rounds.map((round) => ({
+        prompt: gameText.countryGuess.prompt,
+        submittedAnswer: round.submittedAnswer
+          ? gameText.countryGuess.submittedAnswer(round.submittedAnswer)
+          : gameText.countryGuess.skippedAnswer,
+        correctAnswer: round.correctAnswer,
+        isCorrect: round.isCorrect,
+        pointsEarned: round.isCorrect ? pointsPerCountryHit : 0,
+      })),
+    });
+  };
+
+  // Brez odgovora je to preskok države
+  const answerCountryGuess = async (answer?: string) => {
+    const gameId = game.countryGuessGameId;
+    if (!isCountryGuessRunning || !gameId || !currentQuestion || checkingAnswer.current) return;
 
     checkingAnswer.current = true;
     const requestId = ++answerRequestId.current;
     dispatch({ type: 'error', message: null });
     try {
-      const result = await checkCountryGuess({ questionId: currentQuestion.id, answer });
+      const round = { gameId, questionId: currentQuestion.id };
+      const result = answer ? await checkCountryGuess({ ...round, answer }) : await skipCountry(round);
       if (requestId !== answerRequestId.current) return;
 
       // Napačen poskus ne konča vprašanja; igralec lahko poskuša znova ali gre naprej
@@ -283,30 +331,50 @@ function Game() {
         return;
       }
 
-      const lastAttempt = result.isCorrect ? answer : game.selectedAnswer;
       dispatch({
         type: 'submitAnswer',
         feedback: result.isCorrect ? 'correct' : 'incorrect',
         result: {
           prompt: currentQuestion.prompt,
-          submittedAnswer: lastAttempt
-            ? gameText.countryGuess.submittedAnswer(lastAttempt)
-            : gameText.countryGuess.skippedAnswer,
-          correctAnswer: result.correctAnswer,
+          submittedAnswer: answer ?? '',
+          correctAnswer: result.correctAnswer ?? '',
           isCorrect: result.isCorrect,
           pointsEarned: result.isCorrect ? pointsPerCountryHit : 0,
         },
       });
-      dispatch(
-        game.questionIndex === game.questions.length - 1
-          ? { type: 'phase', phase: 'completed' }
-          : { type: 'nextQuestion' },
-      );
+      if (result.finished) {
+        await showCountryGuessResult(gameId, requestId);
+      } else {
+        dispatch({ type: 'nextQuestion' });
+      }
     } catch (error) {
       if (requestId === answerRequestId.current) {
         dispatch({
           type: 'error',
           message: gameText.errors.checkAnswer(errorMessage(error)),
+        });
+      }
+    } finally {
+      if (requestId === answerRequestId.current) {
+        checkingAnswer.current = false;
+      }
+    }
+  };
+
+  const finishCountryGuess = async () => {
+    const gameId = game.countryGuessGameId;
+    if (!gameId || checkingAnswer.current) return;
+
+    checkingAnswer.current = true;
+    const requestId = ++answerRequestId.current;
+    dispatch({ type: 'error', message: null });
+    try {
+      await showCountryGuessResult(gameId, requestId);
+    } catch (error) {
+      if (requestId === answerRequestId.current) {
+        dispatch({
+          type: 'error',
+          message: gameText.errors.updateGame(errorMessage(error)),
         });
       }
     } finally {
@@ -474,7 +542,7 @@ function Game() {
               {formatTime(game.elapsedMs)}
             </span>
           )}
-          <GameButton type="pause" label={gameText.controls.pause} hover onClick={pause} />
+          <GameButton type="pause" label={gameText.controls.pause} hover onClick={() => void pause()} />
           <GameButton type="stop" label={gameText.controls.stop} hover onClick={stop} />
         </FloatingPanel>
       )}
@@ -510,7 +578,7 @@ function Game() {
                   }
                 }
                 onSubmit={(answer) => void answerCountryGuess(answer)}
-                onSkip={() => void answerCountryGuess('')}
+                onSkip={() => void answerCountryGuess()}
               />
             </FloatingPanel>
           )}
@@ -556,7 +624,7 @@ function Game() {
         footer={
           game.activeMode && (
             <div className={styles.pauseActions}>
-              <GameButton type="resume" label={gameText.controls.resume} onClick={resume} />
+              <GameButton type="resume" label={gameText.controls.resume} onClick={() => void resume()} />
               <GameButton type="new-game" label={gameText.controls.newGame} onClick={newGame} />
             </div>
           )

@@ -1,7 +1,9 @@
 import type {
   CheckCountryGuess,
   CountryGuessFeedback,
-  CountryGuessQuestion,
+  CountryGuessGame,
+  CountryGuessResult,
+  CountryGuessRound,
 } from "./types";
 
 const QUESTIONS_PER_GAME = 10;
@@ -88,28 +90,114 @@ const shuffled = <T,>(items: readonly T[]): T[] => {
   return result;
 };
 
-export const getMockCountryGuessQuestions = async (): Promise<CountryGuessQuestion[]> =>
-  shuffled(MOCK_COUNTRIES)
-    .slice(0, QUESTIONS_PER_GAME)
-    .map(({ id, mapCountries }) => ({
-      id,
+type MockGame = {
+  countries: MockCountry[];
+  rounds: CountryGuessResult["rounds"];
+  lastAnswer: string | null;
+  startedAt: number;
+  pausedAt: number | null;
+  pausedMs: number;
+  finishedAt: number | null;
+};
+
+const mockGames = new Map<string, MockGame>();
+let lastMockGameId = 0;
+
+const findGame = (gameId: string): MockGame => {
+  const game = mockGames.get(gameId);
+  if (!game) {
+    throw new RangeError(`Mock game ${gameId} does not exist.`);
+  }
+  return game;
+};
+
+const endRound = (game: MockGame, country: MockCountry, isCorrect: boolean): CountryGuessFeedback => {
+  game.rounds.push({
+    questionId: country.id,
+    correctAnswer: country.name,
+    submittedAnswer: game.lastAnswer,
+    isCorrect,
+  });
+  game.lastAnswer = null;
+  const finished = game.rounds.length === game.countries.length;
+  if (finished) {
+    game.finishedAt = Date.now();
+  }
+  return { isCorrect, correctAnswer: country.name, finished };
+};
+
+const currentCountry = (game: MockGame, questionId: number): MockCountry => {
+  const country = game.countries[game.rounds.length];
+  if (game.finishedAt !== null || game.pausedAt !== null || country?.id !== questionId) {
+    throw new RangeError(`Mock country ${questionId} is not the current question.`);
+  }
+  return country;
+};
+
+export const createMockCountryGuessGame = async (): Promise<CountryGuessGame> => {
+  const id = String(++lastMockGameId);
+  const countries = shuffled(MOCK_COUNTRIES).slice(0, QUESTIONS_PER_GAME);
+  mockGames.set(id, {
+    countries,
+    rounds: [],
+    lastAnswer: null,
+    startedAt: Date.now(),
+    pausedAt: null,
+    pausedMs: 0,
+    finishedAt: null,
+  });
+  return {
+    id,
+    questions: countries.map(({ id: questionId, mapCountries }) => ({
+      id: questionId,
       prompt: "Katera država je označena?",
       hint: "",
       fact: "",
       mapCountries,
-    }));
+    })),
+  };
+};
 
 export const checkMockCountryGuess = async ({
+  gameId,
   questionId,
   answer,
 }: CheckCountryGuess): Promise<CountryGuessFeedback> => {
-  const country = MOCK_COUNTRIES.find(({ id }) => id === questionId);
-  if (!country) {
-    throw new RangeError(`Mock country ${questionId} does not exist.`);
-  }
+  const game = findGame(gameId);
+  const country = currentCountry(game, questionId);
+  game.lastAnswer = answer;
   const accepted = [country.name, ...(country.aliases ?? [])].map(normalizeAnswer);
+  return accepted.includes(normalizeAnswer(answer))
+    ? endRound(game, country, true)
+    : { isCorrect: false, correctAnswer: null, finished: false };
+};
+
+export const skipMockCountry = async ({ gameId, questionId }: CountryGuessRound): Promise<CountryGuessFeedback> => {
+  const game = findGame(gameId);
+  return endRound(game, currentCountry(game, questionId), false);
+};
+
+export const pauseMockCountryGuessGame = async (gameId: string): Promise<void> => {
+  const game = findGame(gameId);
+  game.pausedAt ??= Date.now();
+};
+
+export const resumeMockCountryGuessGame = async (gameId: string): Promise<void> => {
+  const game = findGame(gameId);
+  if (game.pausedAt !== null) {
+    game.pausedMs += Date.now() - game.pausedAt;
+    game.pausedAt = null;
+  }
+};
+
+export const finishMockCountryGuessGame = async (gameId: string): Promise<CountryGuessResult> => {
+  const game = findGame(gameId);
+  await resumeMockCountryGuessGame(gameId);
+  game.finishedAt ??= Date.now();
   return {
-    isCorrect: accepted.includes(normalizeAnswer(answer)),
-    correctAnswer: country.name,
+    hits: game.rounds.filter(({ isCorrect }) => isCorrect).length,
+    totalQuestions: game.countries.length,
+    elapsedMs: game.finishedAt - game.startedAt - game.pausedMs,
+    rounds: game.rounds,
   };
 };
