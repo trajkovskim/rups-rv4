@@ -47,6 +47,7 @@ Privzete vrednosti so primerne za razvoj. Če jih želiš spremeniti, jih zapiš
 | `PUBLIC_API_URL` | `http://localhost:8080/api` | Naslov API-ja, ki ga kliče brskalnik. Zapeče se ob gradnji, zato je po spremembi potreben `--build` |
 | `CORS_ORIGIN` | `http://localhost:3000` | Naslov aplikacije, ki sme klicati API |
 | `POSTGRES_USER`, `POSTGRES_PASSWORD`, `POSTGRES_DB` | `meridiani` | Veljajo ob prvem ustvarjanju baze. Na strežniku nastavi svoje geslo |
+| `JWT_SECRET` | Vrednost za razvoj | Ključ za podpisovanje žetonov, vsaj 32 znakov. Na strežniku nastavi svojo naključno vrednost |
 
 ## Razvoj brez Dockerja
 

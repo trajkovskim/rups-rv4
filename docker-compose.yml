@@ -29,6 +29,8 @@ services:
       DATABASE_URL: postgres://${POSTGRES_USER:-meridiani}:${POSTGRES_PASSWORD:-meridiani}@db:5432/${POSTGRES_DB:-meridiani}
       PORT: 8080
       CORS_ORIGIN: ${CORS_ORIGIN:-http://localhost:3000}
+      # Privzeta vrednost je samo za razvoj, na strežniku nastavi svojo
+      JWT_SECRET: ${JWT_SECRET:-razvojni-kljuc-samo-za-lokalni-zagon}
     ports:
       - "${BACKEND_PORT:-8080}:8080"
     healthcheck:
