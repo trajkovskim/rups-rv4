@@ -27,7 +27,9 @@ const isQuestion = (value: unknown): value is Question =>
   Number.isFinite(value.id) &&
   typeof value.prompt === 'string' &&
   typeof value.hint === 'string' &&
-  typeof value.fact === 'string';
+  typeof value.fact === 'string' && 
+  (typeof value.locationName === 'undefined' ||
+  typeof value.locationName === 'string');
 
 const isLeaderboardEntry = (value: unknown): value is LeaderboardEntry =>
   isRecord(value) &&

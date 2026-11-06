@@ -1,4 +1,4 @@
-import type { ReactNode } from 'react';
+import { useEffect, type ReactNode } from 'react';
 import GameButton from './GameButton';
 import styles from './QuestionPanel.module.css';
 
@@ -44,6 +44,32 @@ const QuestionPanel = ({
   nextLabel,
 }: QuestionPanelProps) => {
   const isAnswerSubmitted = feedback !== undefined;
+
+  useEffect(() => {
+    const handleKeyDown = (event: KeyboardEvent) => {
+      if (event.key !== 'Enter' || event.repeat) return;
+
+      const target = event.target;
+      if (
+        target instanceof HTMLElement &&
+        (target.isContentEditable ||
+          target.closest('input, textarea, select, button, a, [role="button"]'))
+      ) {
+        return;
+      }
+
+      event.preventDefault();
+
+      if (isAnswerSubmitted) {
+        onNext?.();
+      } else if (question && selectedAnswer) {
+        onSubmit(selectedAnswer);
+      }
+    };
+
+    window.addEventListener('keydown', handleKeyDown);
+    return () => window.removeEventListener('keydown', handleKeyDown);
+  }, [isAnswerSubmitted, onNext, onSubmit, question, selectedAnswer]);
 
   return (
     <section className={`${styles.panel} ${feedback ? styles[feedback] : ''}`}>

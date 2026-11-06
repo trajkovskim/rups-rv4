@@ -19,6 +19,7 @@ const MOCK_QUESTIONS: readonly MockQuestion[] = [
     prompt: "Which city is the capital of France?",
     hint: "Look in northern France, near the Seine.",
     fact: "Paris is home to the Eiffel Tower and the Louvre.",
+    locationName: "Paris",
     correctAnswer: { lng: 2.3522, lat: 48.8566 },
   },
   {
@@ -27,6 +28,7 @@ const MOCK_QUESTIONS: readonly MockQuestion[] = [
     prompt: "Which city is the capital of capital of Hungary?",
     hint: "Look along the Danube in central Europe.",
     fact: "Buda and Pest became one city in 1873.",
+    locationName: "Budapest",
     correctAnswer: { lng: 19.0402, lat: 47.4979 },
   },
   {
@@ -35,6 +37,7 @@ const MOCK_QUESTIONS: readonly MockQuestion[] = [
     prompt: "Which city is the capital of Slovenia?",
     hint: "Look between the Alps and the Adriatic Sea.",
     fact: "Ljubljana's dragon is a well-known symbol of the city",
+    locationName: "Ljubljana",
     correctAnswer: { lng: 14.5058, lat: 46.0569 },
   },
   {
@@ -43,6 +46,7 @@ const MOCK_QUESTIONS: readonly MockQuestion[] = [
     prompt: "Select a point inside Portugal.",
     hint: "Find the country on the western edge of the Iberian Peninsula.",
     fact: "Portugal is the westernmost country on mainland Europe.",
+    locationName: "Portugal",
     correctAnswer: { lng: -8.2245, lat: 39.3999 },
   },
   {
@@ -51,6 +55,7 @@ const MOCK_QUESTIONS: readonly MockQuestion[] = [
     prompt: "Select a point inside France.",
     hint: "Look west of Germany and north of Spain.",
     fact: "Mainland France is often called the Hexagon because of its shape.",
+    locationName: "France",
     correctAnswer: { lng: 2.2137, lat: 46.2276 },
   },
   {
@@ -59,6 +64,7 @@ const MOCK_QUESTIONS: readonly MockQuestion[] = [
     prompt: "Select a point inside Croatia.",
     hint: "Look along the Adriatic Sea, east of Italy.",
     fact: "Croatia has more than a thousand islands along its Adriatic coast.",
+    locationName: "Croatia",
     correctAnswer: { lng: 16.0, lat: 45.1 },
   },
 ];
@@ -93,7 +99,13 @@ export const getMockQuestionsForType = async (
   type: QuestionType,
 ): Promise<Question[]> =>
   MOCK_QUESTIONS.filter((question) => question.type === type).map(
-    ({ id, prompt, hint, fact }) => ({ id, prompt, hint, fact }),
+    ({ id, prompt, hint, fact, locationName }) => ({
+    id,
+    prompt,
+    hint,
+    fact,
+    locationName,
+  }),
   );
 
 export const checkMockQuestionAnswer = async ({

@@ -9,16 +9,102 @@ import {
   type FilterSpecification,
   type LayerSpecification,
   type LngLat,
+  type ExpressionSpecification,
 } from 'maplibre-gl';
+import styles from './EuropeMap.module.css';
+import 'maplibre-gl/dist/maplibre-gl.css';
+import type { Feature, FeatureCollection, GeoJsonProperties, Geometry, LineString, Position } from 'geojson';
 
-export const EUROPE_BOUNDARIES = new LngLatBounds([-25.0, 34.0], [45.0, 71.5]);
-const EUROPE_CENTER: [number, number] = [10.4515, 51.1657];
-const EUROPE_ZOOM = 4;
+const INITIAL_VIEW = {
+  center: [4, 52.5] as [number, number],
+  zoom: 3.6,
+};
 const NOTHING_FILTER: FilterSpecification = ['==', ['get', 'country'], ''];
 
-import 'maplibre-gl/dist/maplibre-gl.css';
+const COUNTRY_FILL_COLOR: ExpressionSpecification = [
+  'match',
+  ['get', 'country'],
 
-import type { Feature, FeatureCollection, GeoJsonProperties, Geometry, Position } from 'geojson';
+  ['Albania', 'Cyprus No Mans Area', 'Czechia', 'Finland', 'Iceland', 'Italy', 'Lithuania', 'Netherlands', 'Republic of Serbia', 'Ukraine'],
+  '#4bd472',
+
+  ['Estonia', 'France', 'Greece', 'Hungary', 'Kosovo', 'Malta', 'Norway', 'Poland', 'Portugal', 'Vatican'],
+  '#da0468',
+
+  ['Austria', 'Belgium', 'Cyprus', 'Denmark', 'Montenegro', 'Romania', 'Russia', 'Spain', 'Sweden', 'United Kingdom'],
+  '#d22a04',
+
+  ['Croatia', 'Latvia', 'Luxembourg', 'Moldova', 'Monaco', 'North Macedonia', 'Northern Cyprus', 'San Marino', 'Switzerland', 'Turkey'],
+  '#3807dc',
+
+  ['Andorra', 'Belarus', 'Bosnia and Herzegovina', 'Bulgaria', 'Germany', 'Ireland', 'Liechtenstein', 'Slovakia', 'Slovenia'],
+  '#d89206',
+
+  '#daa208',
+];
+const COUNTRY_OUTLINE_COLOR = '#f5f5f5';
+
+const COUNTRY_COLORS: Record<string, string> = {
+  Albania: '#4bd472',
+  'Cyprus No Mans Area': '#4bd472',
+  Czechia: '#4bd472',
+  Finland: '#4bd472',
+  Iceland: '#4bd472',
+  Italy: '#4bd472',
+  Lithuania: '#4bd472',
+  Netherlands: '#4bd472',
+  'Republic of Serbia': '#4bd472',
+  Ukraine: '#4bd472',
+
+  Estonia: '#da0468',
+  France: '#da0468',
+  Greece: '#da0468',
+  Hungary: '#da0468',
+  Kosovo: '#da0468',
+  Malta: '#da0468',
+  Norway: '#da0468',
+  Poland: '#da0468',
+  Portugal: '#da0468',
+  Vatican: '#da0468',
+
+  Austria: '#d22a04',
+  Belgium: '#d22a04',
+  Cyprus: '#d22a04',
+  Denmark: '#d22a04',
+  Montenegro: '#d22a04',
+  Romania: '#d22a04',
+  Russia: '#d22a04',
+  Spain: '#d22a04',
+  Sweden: '#d22a04',
+  'United Kingdom': '#d22a04',
+
+  Croatia: '#3807dc',
+  Latvia: '#3807dc',
+  Luxembourg: '#3807dc',
+  Moldova: '#3807dc',
+  Monaco: '#3807dc',
+  'North Macedonia': '#3807dc',
+  'Northern Cyprus': '#3807dc',
+  'San Marino': '#3807dc',
+  Switzerland: '#3807dc',
+  Turkey: '#3807dc',
+
+  Andorra: '#d89206',
+  Belarus: '#d89206',
+  'Bosnia and Herzegovina': '#d89206',
+  Bulgaria: '#d89206',
+  Germany: '#d89206',
+  Ireland: '#d89206',
+  Liechtenstein: '#d89206',
+  Slovakia: '#d89206',
+  Slovenia: '#d89206',
+};
+
+const getCountryColor = (country: unknown) =>
+  typeof country === 'string' ? COUNTRY_COLORS[country] ?? '#daa208' : '#daa208';
+
+const ANSWER_LINE_SOURCE = 'answer-connector-source';
+const ANSWER_LINE_LAYER = 'answer-connector-layer';
 
 export interface EuropeMapRefHandle {
   remove: (r: Marker | Popup) => void;
@@ -26,6 +112,16 @@ export interface EuropeMapRefHandle {
   addPopup: (lngLat: LngLat, content: string) => Popup | null;
   clear: () => void;
   highlightCountries: (countries: string[] | null) => void;
+  showAnswerLocation: (lngLat: LngLat) => void;
+  addDottedLine: (start: LngLat, end: LngLat) => void;
+
+  addAnswerMarker: (lngLat: LngLat) => Marker | null;
+  addAnswerPopup: (
+    lngLat: LngLat,
+    locationName: string,
+    fact: string,
+    distance: string,
+  ) => Popup | null;
 }
 
 export type EuropeMapClickEvent = {
@@ -36,20 +132,14 @@ export type EuropeMapClickEvent = {
 };
 
 export type EuropeMapDisplay = {
-  water?: boolean;
-  village?: boolean;
   country?: boolean;
   city?: boolean;
-  state?: boolean;
   navigation?: boolean;
-  // Skrije še ostale napise (manjši kraji, ceste, točke), da zemljevid ne izda odgovora
-  hideOtherLabels?: boolean;
 };
 
 type MapProps = {
   display?: EuropeMapDisplay;
   geojson: FeatureCollection<Geometry, GeoJsonProperties>;
-  boundaries?: LngLatBounds;
 
   onLoaded?: () => void;
   onClick?: (data: EuropeMapClickEvent) => void;
@@ -60,20 +150,28 @@ export type EuropeMapProps = MapProps &
     ref?: React.Ref<EuropeMapRefHandle>;
   };
 
-const updateSymbolVisibility = (map: MapGL, layer: LayerSpecification, display: EuropeMapDisplay | undefined) => {
-  if (layer.type !== 'symbol') {
-    return;
-  }
+const updateSymbolVisibility = (map: MapGL, layer: LayerSpecification) => {
+  const id = layer.id;
 
-  const layerTypes = ['city', 'country', 'village', 'water', 'state'] as const;
-  const matchingTypes = layerTypes.filter((layerType) => layer.id.includes(layerType));
+  const shouldHide =
+    layer.type === 'symbol' ||
+    /^(road|tunnel|bridge|building|aeroway)/.test(id) ||
+    /park|protected|national/i.test(id) ||
+    id === 'boundary_3' ||
+    [
+      'landcover_grass',
+      'landcover_ice',
+      'landcover_wetland',
+      'landcover_sand',
+      'landuse_pitch',
+      'landuse_track',
+      'landuse_cemetery',
+      'landuse_hospital',
+      'landuse_school',
+    ].includes(id);
 
-  for (const layerType of matchingTypes) {
-    map.setLayoutProperty(layer.id, 'visibility', display?.[layerType] ? 'visible' : 'none');
-  }
-
-  if (matchingTypes.length === 0) {
-    map.setLayoutProperty(layer.id, 'visibility', display?.hideOtherLabels ? 'none' : 'visible');
+  if (shouldHide) {
+    map.setLayoutProperty(id, 'visibility', 'none');
   }
 };
 
@@ -91,32 +189,84 @@ const countryBounds = (feature: Feature<Geometry, GeoJsonProperties>): LngLatBou
   if (geometry.type !== 'Polygon' && geometry.type !== 'MultiPolygon') {
     return null;
   }
+
   const polygons = geometry.type === 'Polygon' ? [geometry.coordinates] : geometry.coordinates;
   const mainland = polygons.reduce((largest, polygon) =>
     ringArea(polygon[0]) > ringArea(largest[0]) ? polygon : largest,
   );
+
   const bounds = new LngLatBounds();
   for (const [lng, lat] of mainland[0]) {
-    bounds.extend([
-      Math.min(Math.max(lng, EUROPE_BOUNDARIES.getWest()), EUROPE_BOUNDARIES.getEast()),
-      Math.min(Math.max(lat, EUROPE_BOUNDARIES.getSouth()), EUROPE_BOUNDARIES.getNorth()),
-    ]);
+    bounds.extend([lng, lat]);
   }
+
   return bounds;
+};
+
+const pointInRing = (point: LngLat, ring: Position[]) => {
+  let inside = false;
+
+  for (let i = 0, j = ring.length - 1; i < ring.length; j = i++) {
+    const [xi, yi] = ring[i];
+    const [xj, yj] = ring[j];
+
+    if (
+      (yi > point.lat) !== (yj > point.lat) &&
+      point.lng < ((xj - xi) * (point.lat - yi)) / (yj - yi) + xi
+    ) {
+      inside = !inside;
+    }
+  }
+
+  return inside;
+};
+
+const containsPoint = (
+  feature: Feature<Geometry, GeoJsonProperties>,
+  point: LngLat,
+) => {
+  const geometry = feature.geometry;
+
+  if (geometry.type === 'Polygon') {
+    return (
+      pointInRing(point, geometry.coordinates[0]) &&
+      !geometry.coordinates.slice(1).some((ring) => pointInRing(point, ring))
+    );
+  }
+
+  if (geometry.type === 'MultiPolygon') {
+    return geometry.coordinates.some(
+      (polygon) =>
+        pointInRing(point, polygon[0]) &&
+        !polygon.slice(1).some((ring) => pointInRing(point, ring)),
+    );
+  }
+
+  return false;
 };
 
 const createMap = (
   container: HTMLDivElement,
-  { display, boundaries = EUROPE_BOUNDARIES, ...rest }: MapProps,
+  { display, geojson }: MapProps,
 ): MapGL => {
   const map = new MapGL({
-    container: container,
+    container,
     style: 'https://tiles.openfreemap.org/styles/liberty',
-    center: EUROPE_CENTER,
-    zoom: EUROPE_ZOOM,
+    center: INITIAL_VIEW.center,
+    zoom: INITIAL_VIEW.zoom,
     minZoom: 3,
     maxZoom: 10,
-    maxBounds: boundaries,
+    dragPan: false,
+    scrollZoom: false,
+    boxZoom: false,
+    doubleClickZoom: false,
+    keyboard: false,
+    touchZoomRotate: false,
+    dragRotate: false,
+  });
+
+  map.once('style.load', () => {
+    map.setProjection({ type: 'globe' });
   });
 
   if (display?.navigation) {
@@ -134,19 +284,37 @@ const createMap = (
         }
       }
 
-      updateSymbolVisibility(map, layer, display);
+      updateSymbolVisibility(map, layer);
     });
+
+    if (map.getLayer('water')) {
+      map.setPaintProperty('water', 'fill-color', '#b9ddf0bf');
+    }
 
     map.addSource('data', {
       type: 'geojson',
-      data: rest.geojson,
+      data: geojson,
     });
 
     map.addLayer({
       id: 'data-layer',
       type: 'fill',
       source: 'data',
-      paint: { 'fill-color': '#000000', 'fill-opacity': 0 },
+      paint: {
+        'fill-color': COUNTRY_FILL_COLOR,
+        'fill-opacity': 0.38,
+      },
+    }, 'water');
+
+    map.addLayer({
+      id: 'country-outlines',
+      type: 'line',
+      source: 'data',
+      paint: {
+        'line-color': COUNTRY_OUTLINE_COLOR,
+        'line-width': 1.7,
+        'line-opacity': 0.85,
+      },
     });
 
     map.addLayer({
@@ -154,7 +322,10 @@ const createMap = (
       type: 'fill',
       source: 'data',
       filter: NOTHING_FILTER,
-      paint: { 'fill-color': '#3264f5', 'fill-opacity': 0.4 },
+      paint: {
+        'fill-color': COUNTRY_FILL_COLOR,
+        'fill-opacity': 0.73,
+      },
     });
 
     map.addLayer({
@@ -162,7 +333,11 @@ const createMap = (
       type: 'line',
       source: 'data',
       filter: NOTHING_FILTER,
-      paint: { 'line-color': '#1d3fb8', 'line-width': 2 },
+      paint: {
+        'line-color': COUNTRY_OUTLINE_COLOR,
+        'line-width': 3.7,
+        'line-opacity': 0.95,
+      },
     });
   });
 
@@ -170,7 +345,7 @@ const createMap = (
 };
 
 const EuropeMap = ({ ref, ...props }: EuropeMapProps) => {
-  const { display, geojson, boundaries, onClick, onLoaded, ...rest } = props;
+  const { display, geojson, onClick, onLoaded, ...rest } = props;
 
   const mapContainer = useRef<HTMLDivElement>(null);
   const mapInstance = useRef<MapGL>(null);
@@ -178,7 +353,16 @@ const EuropeMap = ({ ref, ...props }: EuropeMapProps) => {
   const popups = useRef<Popup[]>([]);
   const handlersRef = useRef({ onClick, onLoaded });
   const geojsonRef = useRef(geojson);
-  const hasHighlight = useRef(false);
+  const answerColorRef = useRef('#daa208');
+
+  const getAnswerColor = (lngLat: LngLat) => {
+    const feature = geojsonRef.current.features.find((feature) =>
+      containsPoint(feature, lngLat),
+    );
+    const color = getCountryColor(feature?.properties?.country);
+    answerColorRef.current = color;
+    return color;
+  };
 
   useEffect(() => {
     handlersRef.current.onClick = onClick;
@@ -188,9 +372,9 @@ const EuropeMap = ({ ref, ...props }: EuropeMapProps) => {
 
   useEffect(() => {
     if (mapContainer.current && !mapInstance.current) {
-      const instance = createMap(mapContainer.current, { display, geojson, boundaries });
+      const instance = createMap(mapContainer.current, { display, geojson });
 
-      instance.on('idle', () => onLoaded?.());
+      instance.on('idle', () => handlersRef.current.onLoaded?.());
       instance.on('click', (event) => {
         const features = instance.queryRenderedFeatures(event.point);
         const relevantFeatures = features.filter((feature) => feature.layer.id === 'data-layer');
@@ -233,39 +417,194 @@ const EuropeMap = ({ ref, ...props }: EuropeMapProps) => {
         popups.current.forEach((popup) => popup.remove());
         markers.current = [];
         popups.current = [];
+
+        const map = mapInstance.current;
+
+        if (map?.getLayer(ANSWER_LINE_LAYER)) {
+          map.removeLayer(ANSWER_LINE_LAYER);
+        }
+        if (map?.getSource(ANSWER_LINE_SOURCE)) {
+          map.removeSource(ANSWER_LINE_SOURCE);
+        }
+
+        if (map?.getLayer('highlight-fill')) {
+          map.setFilter('highlight-fill', NOTHING_FILTER);
+          map.setFilter('highlight-line', NOTHING_FILTER);
+        }
+
+        map?.easeTo({
+          center: INITIAL_VIEW.center,
+          zoom: INITIAL_VIEW.zoom,
+          duration: 650,
+        });
+      },
+      showAnswerLocation: (lngLat: LngLat) => {
+        const map = mapInstance.current;
+        if (!map?.getLayer('highlight-fill')) return;
+
+        const feature = geojsonRef.current.features.find((feature) =>
+          containsPoint(feature, lngLat),
+        );
+
+        const country = feature?.properties?.country;
+        getAnswerColor(lngLat);
+
+        const filter: FilterSpecification =
+          typeof country === 'string'
+            ? ['==', ['get', 'country'], country]
+            : NOTHING_FILTER;
+
+        map.setFilter('highlight-fill', filter);
+        map.setFilter('highlight-line', filter);
+
+        map.easeTo({
+          center: lngLat,
+          zoom: Math.min(map.getZoom() + 0.45, 6),
+          duration: 650,
+        });
+      },
+      addDottedLine: (start, end) => {
+        const map = mapInstance.current;
+        if (!map) return;
+        const answerColor = getAnswerColor(end);
+
+        if (map.getLayer(ANSWER_LINE_LAYER)) {
+          map.removeLayer(ANSWER_LINE_LAYER);
+        }
+        if (map.getSource(ANSWER_LINE_SOURCE)) {
+          map.removeSource(ANSWER_LINE_SOURCE);
+        }
+
+        const route: Feature<LineString, GeoJsonProperties> = {
+          type: 'Feature',
+          properties: {},
+          geometry: {
+            type: 'LineString',
+            coordinates: [
+              [start.lng, start.lat],
+              [end.lng, end.lat],
+            ],
+          },
+        };
+
+        map.addSource(ANSWER_LINE_SOURCE, {
+          type: 'geojson',
+          data: route,
+        });
+
+        map.addLayer({
+          id: ANSWER_LINE_LAYER,
+          type: 'line',
+          source: ANSWER_LINE_SOURCE,
+          layout: {
+            'line-cap': 'round',
+            'line-join': 'round',
+          },
+          paint: {
+            'line-color': answerColor,
+            'line-width': 2.5,
+            'line-opacity': 0.95,
+            'line-dasharray': [0.1, 1.5],
+          },
+        });
+      },
+      addAnswerMarker: (lngLat) => {
+        const map = mapInstance.current;
+        if (!map) return null;
+        const answerColor = getAnswerColor(lngLat);
+
+        const marker = new Marker({ color: answerColor })
+          .setLngLat(lngLat)
+          .addTo(map);
+
+        markers.current.push(marker);
+        return marker;
+      },
+      addAnswerPopup: (lngLat, locationName, fact, distance) => {
+        const map = mapInstance.current;
+        if (!map) return null;
+        const answerColor = getAnswerColor(lngLat);
+
+        const card = document.createElement('div');
+        card.className = styles.answerPopup;
+
+        const header = document.createElement('div');
+        header.className = styles.answerPopupHeader;
+
+        const titleGroup = document.createElement('div');
+        titleGroup.className = styles.answerPopupTitleGroup;
+
+        const dot = document.createElement('span');
+        dot.className = styles.answerPopupDot;
+        dot.style.backgroundColor = answerColor;
+
+        const title = document.createElement('strong');
+        title.className = styles.answerPopupTitle;
+        title.textContent = locationName;
+
+        titleGroup.append(dot, title);
+
+        const distanceLabel = document.createElement('span');
+        distanceLabel.className = styles.answerPopupDistance;
+        distanceLabel.textContent = distance;
+
+        header.append(titleGroup, distanceLabel);
+
+        const eyebrow = document.createElement('div');
+        eyebrow.className = styles.answerPopupEyebrow;
+        eyebrow.style.color = answerColor;
+        eyebrow.textContent = 'ALI VEŠ?';
+
+        const factText = document.createElement('p');
+        factText.className = styles.answerPopupFact;
+        factText.textContent = fact;
+
+        card.append(header, eyebrow, factText);
+
+        const popup = new Popup({
+          closeButton: false,
+          closeOnClick: false,
+          closeOnMove: false,
+          anchor: 'left',
+          offset: [14, 0],
+          maxWidth: '340px',
+          className: styles.answerPopupRoot,
+        })
+          .setLngLat(lngLat)
+          .setDOMContent(card)
+          .addTo(map);
+
+        popups.current.push(popup);
+        return popup;
       },
       highlightCountries: (countries) => {
         const map = mapInstance.current;
-        if (!map?.getLayer('highlight-fill')) {
-          return;
-        }
+        if (!map?.getLayer('highlight-fill')) return;
 
         const filter: FilterSpecification = countries
           ? ['in', ['get', 'country'], ['literal', countries]]
           : NOTHING_FILTER;
+
         map.setFilter('highlight-fill', filter);
         map.setFilter('highlight-line', filter);
 
         if (!countries) {
-          if (hasHighlight.current) {
-            map.easeTo({ center: EUROPE_CENTER, zoom: EUROPE_ZOOM });
-          }
-          hasHighlight.current = false;
           return;
         }
 
-        hasHighlight.current = true;
         const bounds = new LngLatBounds();
+
         for (const feature of geojsonRef.current.features) {
           if (countries.includes(feature.properties?.country)) {
             const featureBounds = countryBounds(feature);
             if (featureBounds) bounds.extend(featureBounds);
           }
         }
+
         if (!bounds.isEmpty()) {
-          map.fitBounds(bounds, {
-            padding: { top: 90, bottom: 190, left: 50, right: 50 },
-            maxZoom: 7,
+          map.easeTo({
+            center: bounds.getCenter(),
+            zoom: Math.min(INITIAL_VIEW.zoom + 0.65, 6),
             duration: 600,
           });
         }
@@ -303,12 +642,6 @@ const EuropeMap = ({ ref, ...props }: EuropeMapProps) => {
     }),
     [],
   );
-
-  useEffect(() => {
-    mapInstance.current?.getStyle()?.layers.forEach((layer) => {
-      updateSymbolVisibility(mapInstance.current!, layer, display);
-    });
-  }, [display]);
 
   return <div {...rest} ref={mapContainer} />;
 };

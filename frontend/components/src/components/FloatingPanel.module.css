@@ -39,6 +39,13 @@
   width: min(24rem, calc(100% - 2.5rem));
 }
 
+.leftCenter {
+  top: calc(50% + 20px);
+  left: calc(var(--panel-gutter) + 20px);
+  width: min(36rem, calc(100% - 2.5rem));
+  transform: translateY(-50%);
+}
+
 @media (max-width: 600px) {
   .panel {
     --panel-gutter: 0.75rem;

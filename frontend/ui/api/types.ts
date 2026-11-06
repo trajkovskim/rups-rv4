@@ -43,6 +43,7 @@ export interface Question {
   prompt: string;
   hint: string;
   fact: string;
+  locationName?: string;
 }
 
 export interface CheckQuestionAnswer {

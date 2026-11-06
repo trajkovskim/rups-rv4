@@ -75,6 +75,26 @@ const DEFAULT_DISPLAY: EuropeMapDisplay = { country: true };
 
 const errorMessage = (error: unknown) => (error instanceof Error ? error.message : gameText.errors.unknown);
 
+const calculateDistanceKm = (
+  a: { lng: number; lat: number },
+  b: { lng: number; lat: number },
+) => {
+  const rad = (degrees: number) => (degrees * Math.PI) / 180;
+
+  const lat1 = rad(a.lat);
+  const lat2 = rad(b.lat);
+  const deltaLat = rad(b.lat - a.lat);
+  const deltaLng = rad(b.lng - a.lng);
+
+  const h =
+    Math.sin(deltaLat / 2) ** 2 +
+    Math.cos(lat1) *
+      Math.cos(lat2) *
+      Math.sin(deltaLng / 2) ** 2;
+
+  return 6371 * 2 * Math.atan2(Math.sqrt(h), Math.sqrt(1 - h));
+};
+
 function Game() {
   const [game, dispatch] = useGame();
   const auth = useAuth();
@@ -240,14 +260,42 @@ function Game() {
         questionId: currentQuestion.id,
         answer: game.selectedCoordinates,
       });
-      if (requestId !== answerRequestId.current) return;
+    if (requestId !== answerRequestId.current) return;
 
-      const correctLocation = new MapLngLat(result.correctAnswer.lng, result.correctAnswer.lat);
-      mapRef.current?.addMarker(correctLocation);
-      mapRef.current?.addPopup(
-        correctLocation,
-        gameText.feedback.correctLocation(formatCoordinates(result.correctAnswer)),
-      );
+  const correctLocation = new MapLngLat(
+    result.correctAnswer.lng,
+    result.correctAnswer.lat,
+  );
+
+  const guessedLocation = selectedMarker.current?.getLngLat();
+
+  if (guessedLocation) {
+    mapRef.current?.addDottedLine(guessedLocation, correctLocation);
+  }
+
+  mapRef.current?.showAnswerLocation(correctLocation);
+  mapRef.current?.addAnswerMarker(correctLocation);
+
+  const distance = calculateDistanceKm(
+    game.selectedCoordinates,
+    result.correctAnswer,
+  );
+
+  const distanceLabel =
+    distance < 1
+      ? `${Math.round(distance * 1000)} m`
+      : `${Math.round(distance)} km`;
+
+  const locationName =
+    currentQuestion.locationName ??
+    currentQuestion.prompt.replace(/^Poišči\s+/i, '').trim();
+
+  mapRef.current?.addAnswerPopup(
+    correctLocation,
+    locationName,
+    currentQuestion.fact,
+    distanceLabel,
+  );
 
       const answerFeedback: QuestionFeedback =
         result.correctness === 'yes' ? 'correct' : result.correctness === 'partially' ? 'close' : 'incorrect';
@@ -257,10 +305,6 @@ function Game() {
           : result.correctness === 'partially'
             ? gameText.feedback.partiallyCorrect
             : gameText.feedback.correctLocation(formatCoordinates(result.correctAnswer));
-      const markerCoordinates = selectedMarker.current?.getLngLat();
-      if (markerCoordinates) {
-        mapRef.current?.addPopup(markerCoordinates, `${currentQuestion.fact} ${feedbackMessage}`);
-      }
 
       const questionResult: QuestionResult = {
         prompt: currentQuestion.prompt,
@@ -565,7 +609,7 @@ function Game() {
             <PointsAward points={game.questionResults[game.questionIndex].pointsEarned} />
           )}
           {isCountryGuessRunning && currentQuestion && (
-            <FloatingPanel position="bottom-center">
+            <FloatingPanel position="left-center" mobilePosition="bottom-center">
               <CountryGuessPanel
                 key={currentQuestion.id}
                 prompt={currentQuestion.prompt}
@@ -589,7 +633,7 @@ function Game() {
             </FloatingPanel>
           )}
           {gameState === 'started' && !isCountryGuess && (
-            <FloatingPanel position="bottom-center">
+            <FloatingPanel position="left-center" mobilePosition="bottom-center">
               <QuestionPanel
                 question={currentQuestion}
                 selectedAnswer={game.selectedAnswer ?? undefined}
