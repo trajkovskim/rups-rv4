@@ -1,0 +1,17 @@
+{
+  "name": "meridiani",
+  "version": "1.0.0",
+  "private": true,
+  "workspaces": [
+    "components",
+    "ui"
+  ],
+  "scripts": {
+    "test": "npm run test --workspaces --if-present",
+    "build": "npm run build --workspaces --if-present",
+    "ui": " npm run dev --workspace @meridiani/ui"
+  },
+  "devDependencies": {
+    "@types/node": "^26.6.6"
+  }
+}

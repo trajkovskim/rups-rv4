@@ -1,0 +1,13 @@
+.blurred {
+  backdrop-filter: blur(5px);
+}
+
+.closed {
+  visibility: hidden;
+  opacity: 0;
+  pointer-events: none;
+}
+
+.closed > * {
+  transform: translateY(0.75rem);
+}

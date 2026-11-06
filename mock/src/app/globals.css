@@ -1,0 +1,421 @@
+@import "tailwindcss";
+
+:root {
+  --paper: #f6f6f3;
+  --surface: #ffffff;
+  --ink: #0b0c0f;
+  --ink-soft: #4b4e57;
+  --muted: #6b6e76;
+  --line: #e6e5e0;
+
+  /* Zemljevid: sočne, a mehke barve, kot v šolskem atlasu */
+  --sea: #a9d8f4;
+  --land-1: #9edcae;
+  --land-2: #ffd56b;
+  --land-3: #ffab8f;
+  --land-4: #b9a6ff;
+  --land-5: #ffb0d0;
+  --land-muted: #e9e3d3;
+  --shadow: rgba(18, 58, 104, 0.32);
+
+  /* Kategorije nalog */
+  --mesto: #1f5bff;
+  --regija: #7b2fff;
+  --zgodovina: #ec0b8d;
+
+  /* Natančnost odgovora, od najboljše do najslabše */
+  --t1: #00c26e;
+  --t2: #ffb200;
+  --t3: #ff6a13;
+  --t4: #ff2d2d;
+
+  color-scheme: light;
+}
+
+@theme inline {
+  --color-paper: var(--paper);
+  --color-surface: var(--surface);
+  --color-ink: var(--ink);
+  --color-ink-soft: var(--ink-soft);
+  --color-muted: var(--muted);
+  --color-line: var(--line);
+  --color-sea: var(--sea);
+  --color-mesto: var(--mesto);
+  --color-regija: var(--regija);
+  --color-zgodovina: var(--zgodovina);
+
+  --font-sans: var(--font-inter), ui-sans-serif, system-ui, sans-serif;
+  --font-mono: var(--font-jetbrains), ui-monospace, monospace;
+}
+
+body {
+  background: var(--paper);
+  color: var(--ink);
+  font-family: var(--font-sans);
+  -webkit-font-smoothing: antialiased;
+}
+
+::selection {
+  background: color-mix(in oklab, var(--mesto) 22%, white);
+}
+
+@layer components {
+  .eyebrow {
+    font-size: 11px;
+    font-weight: 600;
+    letter-spacing: 0.16em;
+    text-transform: uppercase;
+    color: var(--muted);
+  }
+
+  .btn-primary,
+  .btn-secondary {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 0.5rem;
+    height: 2.75rem;
+    padding: 0 1.25rem;
+    border-radius: 10px;
+    font-size: 14.5px;
+    font-weight: 600;
+    transition:
+      transform 0.15s ease,
+      background-color 0.2s ease,
+      border-color 0.2s ease;
+  }
+  .btn-primary {
+    background: var(--ink);
+    color: #fff;
+  }
+  .btn-primary:hover {
+    background: #26282e;
+  }
+  .btn-secondary {
+    border: 1px solid var(--line);
+    background: var(--surface);
+    color: var(--ink);
+  }
+  .btn-secondary:hover {
+    border-color: #cfcec8;
+  }
+  .btn-primary:active,
+  .btn-secondary:active {
+    transform: scale(0.98);
+  }
+  .btn-primary:focus-visible,
+  .btn-secondary:focus-visible,
+  .map-zoom-btn:focus-visible {
+    outline: 2px solid var(--mesto);
+    outline-offset: 2px;
+  }
+
+  .map-control {
+    border: 1px solid var(--line);
+    border-radius: 10px;
+    background: color-mix(in oklab, var(--surface) 94%, transparent);
+    box-shadow: 0 4px 14px -8px rgba(13, 14, 17, 0.35);
+    backdrop-filter: blur(6px);
+  }
+  .map-control:is(button):hover {
+    background: var(--paper);
+  }
+  .float-card {
+    border: 1px solid var(--line);
+    border-radius: 16px;
+    background: color-mix(in oklab, var(--surface) 96%, transparent);
+    box-shadow:
+      0 1px 2px rgba(13, 14, 17, 0.06),
+      0 18px 40px -18px rgba(13, 14, 17, 0.4);
+    backdrop-filter: blur(10px);
+  }
+
+  .map-zoom-btn:focus-visible {
+    outline-offset: -2px;
+  }
+
+  .map-zoom-btn {
+    display: grid;
+    place-items: center;
+    width: 2.25rem;
+    height: 2.25rem;
+    color: var(--ink);
+    transition: background-color 0.15s ease;
+  }
+  .map-zoom-btn:hover:not(:disabled) {
+    background: var(--paper);
+  }
+  .map-zoom-btn:disabled {
+    color: #c4c5c9;
+  }
+}
+
+/* Zemljevid */
+.map-sea {
+  /* Svetlejše morje na sredini da občutek globine */
+  background: radial-gradient(120% 90% at 60% 35%, #c8e8fb 0%, var(--sea) 55%, #8fc9ee 100%);
+}
+.map-grid {
+  fill: none;
+  stroke: #fff;
+  stroke-opacity: 0.45;
+  stroke-width: 0.8;
+  vector-effect: non-scaling-stroke;
+}
+/* Svetlejši pas plitvega morja ob obali */
+.map-halo {
+  fill: #fff;
+  fill-opacity: 0.3;
+  stroke: #fff;
+  stroke-opacity: 0.3;
+  stroke-width: 9;
+  stroke-linejoin: round;
+  vector-effect: non-scaling-stroke;
+}
+.map-shadow {
+  fill: var(--shadow);
+}
+.map-dim {
+  fill: #fff;
+  opacity: 0.55;
+  animation: fade-in 0.6s ease-out both;
+}
+.map-country {
+  stroke: #fff;
+  stroke-width: 1.1;
+  stroke-linejoin: round;
+  vector-effect: non-scaling-stroke;
+}
+.map-home {
+  fill: none;
+  stroke: var(--ink);
+  stroke-width: 1.6;
+  stroke-linejoin: round;
+  vector-effect: non-scaling-stroke;
+}
+/* Država pod kazalcem se rahlo osvetli, da učenec ve, nad katero je */
+.map-hover-country {
+  fill: #fff;
+  fill-opacity: 0.28;
+  stroke: #fff;
+  stroke-width: 2.2;
+  stroke-linejoin: round;
+  vector-effect: non-scaling-stroke;
+}
+.map-region {
+  fill: var(--accent);
+  stroke: #fff;
+  stroke-width: 1.4;
+  vector-effect: non-scaling-stroke;
+  animation: region-in 0.7s 0.2s ease-out both;
+}
+.map-hover-line {
+  fill: none;
+  stroke: var(--accent);
+  stroke-width: 1.4;
+  stroke-opacity: 0.85;
+  stroke-dasharray: 5 4;
+}
+.map-arc {
+  fill: none;
+  stroke-width: 2.5;
+  stroke-linecap: round;
+  stroke-dasharray: 1;
+  stroke-dashoffset: 1;
+  animation: draw 0.6s 0.15s cubic-bezier(0.3, 0.7, 0.2, 1) forwards;
+}
+.map-pop {
+  transform-box: fill-box;
+  transform-origin: center;
+  animation: pop 0.35s cubic-bezier(0.3, 1.6, 0.5, 1) both;
+}
+.map-drop {
+  animation: drop 0.5s cubic-bezier(0.3, 1.5, 0.5, 1) both;
+}
+.map-pulse {
+  transform-box: fill-box;
+  transform-origin: center;
+  /* Omejeno število ponovitev, ker vsak utrip na novo izriše cel SVG */
+  animation: pulse 2s 0.8s ease-out 3 both;
+}
+.map-tag {
+  animation: rise 0.35s ease-out both;
+}
+.map-callout {
+  animation: rise 0.45s 0.75s cubic-bezier(0.2, 0.8, 0.2, 1) both;
+}
+
+/* Kartica z nalogo: najprej velika na sredini, nato se umakne gor na sredino */
+.prompt-card {
+  top: 12px;
+  left: 50%;
+  width: min(440px, calc(100% - 24px));
+  transform: translate(-50%, 0);
+  animation: fade-in 0.35s ease-out both;
+  transition:
+    top 0.75s cubic-bezier(0.2, 0.8, 0.2, 1),
+    left 0.6s cubic-bezier(0.2, 0.8, 0.2, 1),
+    transform 0.75s cubic-bezier(0.2, 0.8, 0.2, 1);
+}
+.prompt-card[data-intro="true"] {
+  top: 50%;
+  transform: translate(-50%, -50%) scale(1.04);
+}
+@media (min-width: 1024px) {
+  .prompt-card {
+    top: 16px;
+    width: 520px;
+  }
+  .prompt-card[data-intro="true"] {
+    transform: translate(-50%, -50%) scale(1.4);
+  }
+  /* Ko je desno plošča z rezultatom, gre naloga na sredino preostalega prostora */
+  .prompt-card.is-answered {
+    left: calc((100% - 412px) / 2);
+  }
+}
+.prompt-timer {
+  position: absolute;
+  right: 16px;
+  bottom: 6px;
+  left: 16px;
+  height: 2px;
+  border-radius: 2px;
+  background: var(--accent);
+  opacity: 0.6;
+  transform-origin: left;
+  animation: shrink 2.6s linear both;
+}
+.intro-backdrop {
+  background: rgba(13, 14, 17, 0.22);
+  transition: opacity 0.5s ease;
+}
+.map-confetti {
+  position: absolute;
+  top: -4px;
+  left: -4px;
+  width: 8px;
+  height: 8px;
+  animation: burst 0.95s cubic-bezier(0.15, 0.7, 0.3, 1) both;
+}
+
+/* Splošne animacije */
+.rise {
+  animation: rise 0.45s cubic-bezier(0.2, 0.8, 0.2, 1) both;
+}
+.sheet-in {
+  animation: sheet-in 0.5s cubic-bezier(0.2, 0.8, 0.2, 1) both;
+}
+@media (min-width: 1024px) {
+  .sheet-in {
+    animation-name: slide-in;
+  }
+}
+.meter-fill {
+  animation: grow 0.9s 0.2s cubic-bezier(0.2, 0.8, 0.2, 1) both;
+}
+
+@keyframes rise {
+  from {
+    opacity: 0;
+    transform: translateY(8px);
+  }
+}
+@keyframes sheet-in {
+  from {
+    transform: translateY(100%);
+  }
+}
+@keyframes slide-in {
+  from {
+    opacity: 0;
+    transform: translateX(24px);
+  }
+}
+@keyframes shrink {
+  to {
+    transform: scaleX(0);
+  }
+}
+@keyframes fade-in {
+  from {
+    opacity: 0;
+  }
+}
+@keyframes grow {
+  from {
+    width: 0;
+  }
+}
+@keyframes draw {
+  to {
+    stroke-dashoffset: 0;
+  }
+}
+@keyframes pop {
+  from {
+    transform: scale(0);
+  }
+}
+@keyframes drop {
+  from {
+    transform: translateY(-26px);
+    opacity: 0;
+  }
+}
+@keyframes pulse {
+  0% {
+    transform: scale(0.4);
+    opacity: 0.4;
+  }
+  100% {
+    transform: scale(1.7);
+    opacity: 0;
+  }
+}
+@keyframes region-in {
+  from {
+    fill-opacity: 0;
+  }
+  to {
+    fill-opacity: 0.9;
+  }
+}
+@keyframes burst {
+  0% {
+    transform: translate(0, 0) scale(0.3);
+    opacity: 0;
+  }
+  15% {
+    opacity: 1;
+  }
+  100% {
+    transform: translate(var(--dx), var(--dy)) scale(1) rotate(220deg);
+    opacity: 0;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    animation-delay: 0ms !important;
+    animation-iteration-count: 1 !important;
+  }
+  .map-confetti {
+    display: none;
+  }
+}
+
+/* Imena morij so v ozadju in v dveh vrsticah, da ne tekmujejo z oznakami odgovora */
+.map-sea-label {
+  width: min-content;
+  text-align: center;
+  line-height: 1.15;
+  font-size: 10.5px;
+  font-weight: 600;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  color: #1d4f7a;
+}

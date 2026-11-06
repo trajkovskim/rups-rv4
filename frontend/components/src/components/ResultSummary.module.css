@@ -1,0 +1,360 @@
+.summary {
+  display: flex;
+  width: min(58rem, calc(100vw - 2rem));
+  max-height: calc(100dvh - 2rem);
+  flex-direction: column;
+  overflow: hidden;
+  color: #141414;
+}
+
+.header {
+  flex: 0 0 auto;
+  text-align: center;
+}
+
+.eyebrow {
+  composes: eyebrow from '../shared.module.css';
+
+  --eyebrow-color: #606875;
+  --eyebrow-size: 0.68rem;
+  --eyebrow-weight: 850;
+  --eyebrow-spacing: 0.15em;
+  --eyebrow-transform: uppercase;
+}
+
+.points {
+  margin: 0.9rem 0 0;
+  color: #111;
+  font-size: clamp(4rem, 11vw, 6.5rem);
+  font-weight: 900;
+  letter-spacing: -0.07em;
+  line-height: 0.9;
+}
+
+.pointsLabel {
+  margin: 0.7rem 0 0;
+  color: #626873;
+  font-size: 0.95rem;
+}
+
+.stat {
+  display: inline-flex;
+  align-items: baseline;
+  gap: 0.5rem;
+  margin: 1rem 0 0;
+  padding: 0.45rem 1rem;
+  border-radius: 999px;
+  background: rgb(40 45 55 / 8%);
+  color: #626873;
+  font-size: 0.85rem;
+}
+
+.stat strong {
+  color: #111;
+  font-size: 1.25rem;
+  font-weight: 850;
+  font-variant-numeric: tabular-nums;
+}
+
+.resultMessage {
+  margin: 1.4rem 0 0;
+  color: #424a56;
+  font-size: 1rem;
+  font-weight: 650;
+}
+
+.progressSection {
+  width: min(100%, 36rem);
+  flex: 0 0 auto;
+  align-self: center;
+  margin-top: 1.6rem;
+}
+
+.progress {
+  display: flex;
+  height: 0.65rem;
+  gap: 0.15rem;
+  overflow: hidden;
+  border-radius: 999px;
+  background: rgb(40 45 55 / 12%);
+}
+
+.progress span {
+  flex: 1 1 0;
+}
+
+.goodSegment,
+.goodDot {
+  background: #16845b;
+}
+
+.mediumSegment,
+.mediumDot {
+  background: #d99a19;
+}
+
+.badSegment,
+.badDot {
+  background: #d64b4b;
+}
+
+.emptySegment {
+  background: #d7d9de;
+}
+
+.legend {
+  display: flex;
+  justify-content: center;
+  gap: 1.2rem;
+  margin-top: 0.6rem;
+  color: #424a56;
+  font-size: 0.75rem;
+}
+
+.legend span {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.35rem;
+}
+
+.legend i {
+  width: 0.5rem;
+  height: 0.5rem;
+  border-radius: 50%;
+}
+
+.review {
+  display: flex;
+  min-height: 0;
+  flex-direction: column;
+  margin-top: 1.8rem;
+}
+
+.reviewTitle {
+  margin: 0 0 0.65rem;
+  font-size: 0.9rem;
+  font-weight: 800;
+}
+
+.answers {
+  display: grid;
+  max-height: min(32vh, 17rem);
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 0.75rem;
+  overflow-y: auto;
+  padding: 0.1rem 0.25rem 0.25rem 0;
+  overscroll-behavior: contain;
+}
+
+.questionResult {
+  display: flex;
+  min-width: 0;
+  flex-direction: column;
+  padding: 0.9rem;
+  border: 1px solid rgb(30 40 55 / 12%);
+  border-radius: 1rem;
+  background: rgb(255 255 255 / 84%);
+  text-align: left;
+  text-shadow: none;
+}
+
+.questionGood {
+  border-bottom: 3px solid #16845b;
+}
+
+.questionMedium {
+  border-bottom: 3px solid #d99a19;
+}
+
+.questionBad {
+  border-bottom: 3px solid #d64b4b;
+}
+
+.cardHeader {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.5rem;
+}
+
+.questionNumber {
+  padding: 0.3rem 0.5rem;
+  border-radius: 0.4rem;
+  background: #edf0f2;
+  color: #414953;
+  font-size: 0.67rem;
+  font-weight: 800;
+}
+.goodLabel,
+.mediumLabel,
+.badLabel {
+  font-size: 0.68rem;
+  font-weight: 850;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+}
+
+.goodLabel {
+  color: #16845b;
+}
+
+.mediumLabel {
+  color: #a8750e;
+}
+
+.badLabel {
+  color: #c13d3d;
+}
+
+.prompt {
+  margin: 0.85rem 0 0;
+  color: #17191e;
+  font-size: 0.86rem;
+  font-weight: 750;
+  line-height: 1.35;
+}
+
+.submittedAnswer,
+.correctAnswer {
+  margin: 0.35rem 0 0;
+  color: #16845b;
+  font-size: 0.78rem;
+  line-height: 1.4;
+  overflow-wrap: anywhere;
+}
+
+.correctAnswer {
+  color: #176b3a;
+  font-weight: 650;
+}
+
+.distance {
+  margin: 0.45rem 0 0;
+  font-size: 0.8rem;
+  font-weight: 700;
+  line-height: 1.4;
+}
+
+.distance strong {
+  font-weight: 850;
+}
+
+.distanceGood {
+  color: #16845b;
+}
+
+.distanceMedium {
+  color: #a8750e;
+}
+
+.distanceBad {
+  color: #c13d3d;
+}
+
+.cardScore {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 0.5rem;
+  margin-top: auto;
+  padding-top: 1rem;
+  color: #596477;
+  font-size: 0.68rem;
+}
+
+.questionGood .cardScore strong {
+  color: #16845b;
+}
+
+.questionMedium .cardScore strong {
+  color: #a8750e;
+}
+
+.questionBad .cardScore strong {
+  color: #c13d3d;
+}
+
+.cardProgress {
+  height: 0.32rem;
+  margin-top: 0.55rem;
+  overflow: hidden;
+  border-radius: 999px;
+  background: #ececef;
+}
+
+.cardProgress span {
+  display: block;
+  width: 0;
+  height: 100%;
+  transition: width 0.3s ease;
+}
+
+.cardProgressGood {
+  background: #16845b;
+}
+
+.cardProgressMedium {
+  background: #d99a19;
+}
+
+.cardProgressBad {
+  background: #d64b4b;
+}
+
+.actions {
+  display: flex;
+  justify-content: center;
+  flex: 0 0 auto;
+  padding-top: 1rem;
+}
+
+.actions button {
+  padding: 0.8rem 1.25rem;
+  background: #111;
+  box-shadow: none;
+  font-size: 0.85rem;
+}
+
+.actions button:hover {
+  background: #303030;
+}
+
+@media (max-width: 800px) {
+  .answers {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+}
+
+@media (max-width: 600px) {
+  .summary {
+    width: calc(100vw - 1.5rem);
+    max-height: calc(100dvh - 1.5rem);
+  }
+
+  .points {
+    margin-top: 0.65rem;
+    font-size: clamp(3.5rem, 17vw, 5rem);
+  }
+
+  .resultMessage {
+    margin-top: 0.8rem;
+    font-size: 0.87rem;
+  }
+
+  .progressSection {
+    margin-top: 1rem;
+  }
+
+  .review {
+    margin-top: 1.15rem;
+  }
+
+  .answers {
+    max-height: 28vh;
+    grid-template-columns: 1fr;
+  }
+
+  .questionResult {
+    min-height: 10rem;
+  }
+}
