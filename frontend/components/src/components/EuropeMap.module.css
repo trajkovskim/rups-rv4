@@ -51,8 +51,8 @@
   flex-shrink: 0;
   padding: 4px 9px;
   border-radius: 20px;
-  background: #fff5df;
-  color: #84601c;
+  background: #dcfce7;
+  color: #166534;
   font-size: 12px;
   font-weight: 650;
 }
@@ -70,4 +70,13 @@
   color: #303747;
   font-size: 14px;
   line-height: 1.55;
+}
+.answerPopupDistance_medium {
+  background: #fef3c7;
+  color: #92400e;
+}
+
+.answerPopupDistance_far {
+  background: #fee2e2;
+  color: #991b1b;
 }

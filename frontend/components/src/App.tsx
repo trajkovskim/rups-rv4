@@ -118,6 +118,7 @@ const RESULT_SUMMARY_CONTENT: ResultSummaryContent = {
   resultMessage: (correct, total, percentage) => `${correct} of ${total} answers correct · ${percentage}%`,
   correctLabel: 'Correct',
   incorrectLabel: 'Incorrect',
+  partiallyCorrectLabel: 'Close',
   reviewLabel: 'Review',
   answersHeading: 'Answer review',
   questionLabel: (number) => `Question ${number}`,
@@ -568,31 +569,35 @@ const App = () => {
                 points={30}
                 correctAnswers={3}
                 totalQuestions={4}
-                pointsPerCorrectAnswer={10}
+                maxPointsPerQuestion={10}
                 questionResults={[
                   {
-                    prompt: 'Which country is home to Paris?',
-                    submittedAnswer: 'France',
-                    correctAnswer: 'France',
+                    prompt: 'V kateri državi se nahaja Pariz?',
+                    submittedAnswer: 'Francija',
+                    correctAnswer: 'Francija',
                     isCorrect: true,
+                    quality: 'good',
                   },
                   {
-                    prompt: 'Which country is home to Rome?',
-                    submittedAnswer: 'Spain',
-                    correctAnswer: 'Italy',
+                    prompt: 'V kateri državi se nahaja Rim?',
+                    submittedAnswer: 'Španija',
+                    correctAnswer: 'Italija',
                     isCorrect: false,
+                    quality: 'bad',
                   },
                   {
-                    prompt: 'Which country is home to Lisbon?',
-                    submittedAnswer: 'Portugal',
-                    correctAnswer: 'Portugal',
+                    prompt: 'V kateri državi se nahaja Lizbona?',
+                    submittedAnswer: 'Portugalska',
+                    correctAnswer: 'Portugalska',
                     isCorrect: true,
+                    quality: 'good',
                   },
                   {
-                    prompt: 'Which country is home to Athens?',
-                    submittedAnswer: 'Greece',
-                    correctAnswer: 'Greece',
+                    prompt: 'V kateri državi se nahajajo Atene?',
+                    submittedAnswer: 'Grčija',
+                    correctAnswer: 'Grčija',
                     isCorrect: true,
+                    quality: 'good',
                   },
                 ]}
                 onReplay={() => setSummaryMessage('Replay selected — start a new round whenever you are ready.')}

@@ -38,11 +38,13 @@ export type GameMode = (typeof GAME_MODES)[number];
 export type GamePhase = "ready" | "selecting" | "started" | "paused" | "completed";
 
 export type QuestionResult = {
-  prompt: ReactNode;
-  submittedAnswer: ReactNode;
-  correctAnswer: ReactNode;
+  prompt: string;
+  submittedAnswer: string;
+  correctAnswer: string;
   isCorrect: boolean;
   pointsEarned: number;
+  quality: 'good' | 'medium' | 'bad';
+  distanceKm?: number;
 };
 
 export type GameData = {

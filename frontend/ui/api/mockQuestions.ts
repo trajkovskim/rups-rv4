@@ -6,65 +6,76 @@ import type {
   Question,
   QuestionAnswerFeedback,
 } from "./types";
+import {
+  isInsideCountry,
+  nearestCountryBoundaryDistance,
+} from "./countryShapes";
 
 type MockQuestion = Question & {
   type: QuestionType;
   correctAnswer: LngLat;
+  country?: string;
 };
 
 const MOCK_QUESTIONS: readonly MockQuestion[] = [
   {
     id: 101,
     type: QuestionType.CITIES,
-    prompt: "Which city is the capital of France?",
-    hint: "Look in northern France, near the Seine.",
-    fact: "Paris is home to the Eiffel Tower and the Louvre.",
-    locationName: "Paris",
+    prompt: "Katero mesto je glavno mesto Francije?",
+    hint: "Išči na severu Francije, v bližini reke Sene.",
+    fact: "V Parizu se nahajata Eifflov stolp in muzej Louvre.",
+    locationName: "Pariz",
+    country: "France",
     correctAnswer: { lng: 2.3522, lat: 48.8566 },
   },
   {
     id: 102,
     type: QuestionType.CITIES,
-    prompt: "Which city is the capital of capital of Hungary?",
-    hint: "Look along the Danube in central Europe.",
-    fact: "Buda and Pest became one city in 1873.",
-    locationName: "Budapest",
+    prompt: "Katero mesto je glavno mesto Madžarske?",
+    hint: "Išči ob reki Donavi v osrednji Evropi.",
+    fact: "Budim in Pešta sta se leta 1873 združila v eno mesto.",
+    locationName: "Budimpešta",
+    country: "Hungary",
     correctAnswer: { lng: 19.0402, lat: 47.4979 },
   },
   {
     id: 103,
     type: QuestionType.CITIES,
-    prompt: "Which city is the capital of Slovenia?",
-    hint: "Look between the Alps and the Adriatic Sea.",
-    fact: "Ljubljana's dragon is a well-known symbol of the city",
+    prompt: "Katero mesto je glavno mesto Slovenije?",
+    hint: "Išči med Alpami in Jadranskim morjem.",
+    fact: "Ljubljanski zmaj je eden najbolj prepoznavnih simbolov mesta.",
     locationName: "Ljubljana",
+    country: "Slovenia",
     correctAnswer: { lng: 14.5058, lat: 46.0569 },
   },
   {
     id: 201,
     type: QuestionType.COUNTRIES,
-    prompt: "Select a point inside Portugal.",
-    hint: "Find the country on the western edge of the Iberian Peninsula.",
-    fact: "Portugal is the westernmost country on mainland Europe.",
-    locationName: "Portugal",
+    prompt: "Izberi točko znotraj Portugalske.",
+    hint: "Poišči državo na zahodnem robu Iberskega polotoka.",
+    fact: "Portugalska je najzahodnejša država celinske Evrope.",
+    locationName: "Portugalska",
+    country: "Portugal",
     correctAnswer: { lng: -8.2245, lat: 39.3999 },
   },
   {
     id: 202,
     type: QuestionType.COUNTRIES,
-    prompt: "Select a point inside France.",
-    hint: "Look west of Germany and north of Spain.",
-    fact: "Mainland France is often called the Hexagon because of its shape.",
-    locationName: "France",
+    prompt: "Izberi točko znotraj Francije.",
+    hint: "Poišči državo zahodno od Nemčije in severno od Španije.",
+    fact: "Celinsko Francijo zaradi njene oblike pogosto imenujejo šesterokotnik.",
+    locationName: "Francija",
+    country: "France",
     correctAnswer: { lng: 2.2137, lat: 46.2276 },
   },
   {
     id: 203,
     type: QuestionType.COUNTRIES,
-    prompt: "Select a point inside Croatia.",
-    hint: "Look along the Adriatic Sea, east of Italy.",
-    fact: "Croatia has more than a thousand islands along its Adriatic coast.",
-    locationName: "Croatia",
+    prompt: "Izberi točko znotraj Hrvaške.",
+    hint: "Poišči državo ob Jadranskem morju, vzhodno od Italije.",
+    fact: "Hrvaška ima ob jadranski obali več kot tisoč otokov.",
+    locationName: "Hrvaška",
+    country: "Croatia",
     correctAnswer: { lng: 16.0, lat: 45.1 },
   },
 ];
@@ -100,13 +111,29 @@ export const getMockQuestionsForType = async (
 ): Promise<Question[]> =>
   MOCK_QUESTIONS.filter((question) => question.type === type).map(
     ({ id, prompt, hint, fact, locationName }) => ({
-    id,
-    prompt,
-    hint,
-    fact,
-    locationName,
-  }),
+      id,
+      prompt,
+      hint,
+      fact,
+      locationName,
+    }),
   );
+
+const MAX_POINTS = 1000;
+
+const pointsForDistance = (distanceKm: number): number =>
+  distanceKm <= 25
+    ? MAX_POINTS
+    : Math.round(MAX_POINTS * Math.exp(-(distanceKm - 25) / 600));
+
+const correctnessForDistance = (
+  distanceKm: number,
+): "yes" | "partially" | "no" =>
+  distanceKm <= 50
+    ? "yes"
+    : distanceKm <= 250
+      ? "partially"
+      : "no";
 
 export const checkMockQuestionAnswer = async ({
   questionId,
@@ -115,17 +142,42 @@ export const checkMockQuestionAnswer = async ({
   const question = MOCK_QUESTIONS.find(({ id }) => id === questionId);
 
   if (!question) {
-    throw new RangeError(`Mock question ${questionId} does not exist.`);
+    throw new RangeError(`Testno vprašanje ${questionId} ne obstaja.`);
   }
 
-  const distance = distanceInKilometers(answer, question.correctAnswer);
-  const correctness =
-    distance <= 30 ? "yes" : distance <= 150 ? "partially" : "no";
+  if (question.type === QuestionType.COUNTRIES && question.country) {
+    if (isInsideCountry(answer, question.country)) {
+      return {
+        correctAnswer: question.correctAnswer,
+        distanceKm: 0,
+        correctness: "yes",
+        points: MAX_POINTS,
+      };
+    }
+
+    const distanceKm = nearestCountryBoundaryDistance(
+      answer,
+      question.country,
+    );
+
+    return {
+      correctAnswer: question.correctAnswer,
+      distanceKm,
+      correctness: correctnessForDistance(distanceKm),
+      points: pointsForDistance(distanceKm),
+    };
+  }
+
+  const distanceKm = distanceInKilometers(
+    answer,
+    question.correctAnswer,
+  );
 
   return {
     correctAnswer: question.correctAnswer,
-    correctness,
-    points: correctness === "yes" ? 10 : correctness === "partially" ? 5 : 0,
+    distanceKm,
+    correctness: correctnessForDistance(distanceKm),
+    points: pointsForDistance(distanceKm),
   };
 };
 
@@ -133,8 +185,12 @@ export const getMockLeaderboard = async (
   gameModeId: number,
 ): Promise<LeaderboardEntry[]> => {
   const leaderboard = MOCK_LEADERBOARDS[gameModeId];
+
   if (!leaderboard) {
-    throw new RangeError(`Mock leaderboard for game mode ${gameModeId} does not exist.`);
+    throw new RangeError(
+      `Testna lestvica za način igre ${gameModeId} ne obstaja.`,
+    );
   }
+
   return leaderboard.map((entry) => ({ ...entry }));
 };

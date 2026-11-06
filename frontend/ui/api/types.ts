@@ -55,6 +55,7 @@ export interface QuestionAnswerFeedback {
   correctAnswer: LngLat;
   correctness: 'yes' | 'no' | 'partially';
   points: number;
+  distanceKm: number;
 }
 
 export interface CountryGuessQuestion extends Question {

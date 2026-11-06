@@ -121,6 +121,7 @@ export interface EuropeMapRefHandle {
     locationName: string,
     fact: string,
     distance: string,
+    distanceTier: 'good' | 'medium' | 'far',
   ) => Popup | null;
 }
 
@@ -520,7 +521,7 @@ const EuropeMap = ({ ref, ...props }: EuropeMapProps) => {
         markers.current.push(marker);
         return marker;
       },
-      addAnswerPopup: (lngLat, locationName, fact, distance) => {
+      addAnswerPopup: (lngLat, locationName, fact, distance, distanceTier) => {
         const map = mapInstance.current;
         if (!map) return null;
         const answerColor = getAnswerColor(lngLat);
@@ -545,7 +546,7 @@ const EuropeMap = ({ ref, ...props }: EuropeMapProps) => {
         titleGroup.append(dot, title);
 
         const distanceLabel = document.createElement('span');
-        distanceLabel.className = styles.answerPopupDistance;
+        distanceLabel.className = `${styles.answerPopupDistance} ${styles[`answerPopupDistance_${distanceTier}`]}`;
         distanceLabel.textContent = distance;
 
         header.append(titleGroup, distanceLabel);
@@ -604,7 +605,7 @@ const EuropeMap = ({ ref, ...props }: EuropeMapProps) => {
         if (!bounds.isEmpty()) {
           map.easeTo({
             center: bounds.getCenter(),
-            zoom: Math.min(INITIAL_VIEW.zoom + 0.65, 6),
+            zoom: Math.min(map.getZoom() + 0.65, 6),
             duration: 600,
           });
         }

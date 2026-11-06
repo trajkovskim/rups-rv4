@@ -68,32 +68,12 @@ const LEADERBOARD_TABS = GAME_MODES.filter((mode) => mode.kind === 'map').map(({
   label: name,
 }));
 
-const pointsPerCorrectAnswer = 10;
+const maxPointsPerQuestion = 1000;
 const pointsPerCountryHit = 1;
 const STOPWATCH_INTERVAL_MS = 100;
 const DEFAULT_DISPLAY: EuropeMapDisplay = { country: true };
 
 const errorMessage = (error: unknown) => (error instanceof Error ? error.message : gameText.errors.unknown);
-
-const calculateDistanceKm = (
-  a: { lng: number; lat: number },
-  b: { lng: number; lat: number },
-) => {
-  const rad = (degrees: number) => (degrees * Math.PI) / 180;
-
-  const lat1 = rad(a.lat);
-  const lat2 = rad(b.lat);
-  const deltaLat = rad(b.lat - a.lat);
-  const deltaLng = rad(b.lng - a.lng);
-
-  const h =
-    Math.sin(deltaLat / 2) ** 2 +
-    Math.cos(lat1) *
-      Math.cos(lat2) *
-      Math.sin(deltaLng / 2) ** 2;
-
-  return 6371 * 2 * Math.atan2(Math.sqrt(h), Math.sqrt(1 - h));
-};
 
 function Game() {
   const [game, dispatch] = useGame();
@@ -276,10 +256,7 @@ function Game() {
   mapRef.current?.showAnswerLocation(correctLocation);
   mapRef.current?.addAnswerMarker(correctLocation);
 
-  const distance = calculateDistanceKm(
-    game.selectedCoordinates,
-    result.correctAnswer,
-  );
+  const distance = result.distanceKm;
 
   const distanceLabel =
     distance < 1
@@ -295,6 +272,11 @@ function Game() {
     locationName,
     currentQuestion.fact,
     distanceLabel,
+    result.correctness === 'yes'
+      ? 'good'
+      : result.correctness === 'partially'
+        ? 'medium'
+        : 'far',
   );
 
       const answerFeedback: QuestionFeedback =
@@ -312,6 +294,13 @@ function Game() {
         correctAnswer: formatCoordinates(result.correctAnswer),
         isCorrect: result.correctness === 'yes',
         pointsEarned: result.points,
+        quality:
+          result.correctness === 'yes'
+            ? 'good'
+            : result.correctness === 'partially'
+              ? 'medium'
+              : 'bad',
+        distanceKm: result.distanceKm,
       };
       dispatch({
         type: 'submitAnswer',
@@ -357,6 +346,7 @@ function Game() {
         correctAnswer: round.correctAnswer,
         isCorrect: round.isCorrect,
         pointsEarned: round.isCorrect ? pointsPerCountryHit : 0,
+        quality: round.isCorrect ? 'good' : 'bad',
       })),
     });
   };
@@ -389,6 +379,7 @@ function Game() {
           correctAnswer: result.correctAnswer ?? '',
           isCorrect: result.isCorrect,
           pointsEarned: result.isCorrect ? pointsPerCountryHit : 0,
+          quality: result.isCorrect ? 'good' : 'bad',
         },
       });
       if (result.finished) {
@@ -544,7 +535,7 @@ function Game() {
               points={game.points}
               correctAnswers={game.correctAnswers}
               totalQuestions={game.questions.length}
-              pointsPerCorrectAnswer={isCountryGuess ? pointsPerCountryHit : pointsPerCorrectAnswer}
+              maxPointsPerQuestion={isCountryGuess ? pointsPerCountryHit : maxPointsPerQuestion}
               questionResults={game.questionResults}
               onReplay={newGame}
               content={isCountryGuess ? COUNTRY_GUESS_SUMMARY_CONTENT : RESULT_SUMMARY_CONTENT}

@@ -49,6 +49,7 @@ export const gameText = {
         ? 'Odlično — pravilno si odgovoril na vsa vprašanja.'
         : `Pravilno si odgovoril na ${correctAnswers} od ${totalQuestions} vprašanj.`,
     correctLabel: 'Pravilno',
+    partiallyCorrectLabel: 'Deloma',
     incorrectLabel: 'Napačno',
     reviewLabel: 'Pregled',
     answersHeading: 'Tvoji odgovori',

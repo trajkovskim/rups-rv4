@@ -53,7 +53,9 @@ export const checkQuestionAnswer = async (
     !isLngLat(data.correctAnswer) ||
     !isCorrectness(data.correctness) ||
     typeof data.points !== 'number' ||
-    !Number.isFinite(data.points)
+    !Number.isFinite(data.points) ||
+    typeof data.distanceKm !== 'number' ||
+    !Number.isFinite(data.distanceKm)
   ) {
     throw new TypeError('Invalid question answer feedback returned by the API');
   }
@@ -62,6 +64,7 @@ export const checkQuestionAnswer = async (
     correctAnswer: data.correctAnswer,
     correctness: data.correctness,
     points: data.points,
+    distanceKm: data.distanceKm,
   };
 };
 
