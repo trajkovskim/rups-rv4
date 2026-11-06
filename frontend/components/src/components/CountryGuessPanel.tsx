@@ -78,6 +78,12 @@ const CountryGuessPanel = ({
           autoCorrect="off"
           spellCheck={false}
           autoFocus
+          onKeyDown={(event) => {
+            if (event.key === 'Enter') {
+              event.preventDefault();
+              submit();
+            }
+          }}
         />
         <GameButton type="submit" disabled={!trimmedAnswer} onClick={submit} label={submitLabel} />
         <GameButton type="next" onClick={onSkip} label={skipLabel} />

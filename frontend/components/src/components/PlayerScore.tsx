@@ -12,10 +12,15 @@ const PlayerScore = ({ name, points, pointsLabel }: PlayerScoreProps) => {
   return (
     <FloatingPanel position="top-right">
       <aside className={styles.score}>
-        <span className={styles.playerName}>{name}</span>
+        <div className={styles.scoreHeader}>
+          <span className={styles.playerName}>{name}</span>
+        </div>
+
         <div className={styles.points}>
           <span className={styles.scoreLabel}>{pointsLabel}</span>
-          <strong className={styles.scoreValue}>{points}</strong>
+          <strong className={styles.scoreValue}>
+            {points.toLocaleString('sl-SI')}
+          </strong>
         </div>
       </aside>
     </FloatingPanel>

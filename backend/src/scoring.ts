@@ -1,4 +1,4 @@
-import { countryBorderPoints, isInsideCountry } from "./countryShapes.js";
+import { isInsideCountry, nearestCountryBoundaryDistance } from "./countryShapes.js";
 
 export interface LngLat {
   lng: number;
@@ -6,6 +6,7 @@ export interface LngLat {
 }
 
 export type Correctness = "yes" | "partially" | "no";
+export const MAX_POINTS = 1000;
 
 const distanceInKilometers = (first: LngLat, second: LngLat) => {
   const radians = (degrees: number) => (degrees * Math.PI) / 180;
@@ -20,24 +21,27 @@ const distanceInKilometers = (first: LngLat, second: LngLat) => {
   return 6371 * 2 * Math.atan2(Math.sqrt(haversine), Math.sqrt(1 - haversine));
 };
 
-const toScore = (correctness: Correctness) => ({
-  correctness,
-  points: correctness === "yes" ? 10 : correctness === "partially" ? 5 : 0,
+export const pointsForDistance = (distanceKm: number) =>
+  distanceKm <= 25
+    ? MAX_POINTS
+    : Math.round(MAX_POINTS * Math.exp(-(distanceKm - 25) / 600));
+
+const correctnessForDistance = (distanceKm: number): Correctness =>
+  distanceKm <= 50 ? "yes" : distanceKm <= 250 ? "partially" : "no";
+
+const resultForDistance = (distanceKm: number) => ({
+  distanceKm,
+  correctness: correctnessForDistance(distanceKm),
+  points: pointsForDistance(distanceKm),
 });
 
-export const scoreAnswer = (answer: LngLat, correctAnswer: LngLat) => {
-  const distance = distanceInKilometers(answer, correctAnswer);
-  return toScore(distance <= 30 ? "yes" : distance <= 150 ? "partially" : "no");
-};
+export const scoreAnswer = (answer: LngLat, correctAnswer: LngLat) =>
+  resultForDistance(distanceInKilometers(answer, correctAnswer));
 
-// Pri državi šteje klik kjerkoli znotraj meja. Dovoljenih 30 km od točke je za najmanjše
-// države, kot sta Vatikan in Monako, ki ju na zemljevidu Evrope skoraj ni mogoče zadeti.
-export const scoreCountryAnswer = (answer: LngLat, correctAnswer: LngLat, country: string) => {
-  if (isInsideCountry(answer, country) || distanceInKilometers(answer, correctAnswer) <= 30) {
-    return toScore("yes");
+export const scoreCountryAnswer = (answer: LngLat, _correctAnswer: LngLat, country: string) => {
+  if (isInsideCountry(answer, country)) {
+    return { distanceKm: 0, correctness: "yes" as const, points: MAX_POINTS };
   }
-  const isNearBorder = countryBorderPoints(country).some(
-    (point) => distanceInKilometers(answer, point) <= 50,
-  );
-  return toScore(isNearBorder ? "partially" : "no");
+
+  return resultForDistance(nearestCountryBoundaryDistance(answer, country));
 };

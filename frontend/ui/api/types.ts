@@ -43,6 +43,7 @@ export interface Question {
   prompt: string;
   hint: string;
   fact: string;
+  locationName?: string;
 }
 
 export interface CheckQuestionAnswer {
@@ -54,6 +55,7 @@ export interface QuestionAnswerFeedback {
   correctAnswer: LngLat;
   correctness: 'yes' | 'no' | 'partially';
   points: number;
+  distanceKm: number;
 }
 
 export interface CountryGuessQuestion extends Question {

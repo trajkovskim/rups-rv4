@@ -1,7 +1,7 @@
 import type { HTMLAttributes, ReactNode } from 'react';
 import styles from './FloatingPanel.module.css';
 
-export type FloatingPanelPosition = 'top-left' | 'top-right' | 'bottom-center' | 'bottom-right';
+export type FloatingPanelPosition = 'top-left' | 'top-right' | 'bottom-center' | 'bottom-right'| 'left-center';
 
 export type FloatingPanelProps = Omit<HTMLAttributes<HTMLDivElement>, 'children'> & {
   children: ReactNode;
@@ -16,6 +16,7 @@ const positionStyles: Record<FloatingPanelPosition, string> = {
   'top-right': styles.topRight,
   'bottom-center': styles.bottomCenter,
   'bottom-right': styles.bottomRight,
+  'left-center': styles.leftCenter,
 };
 
 const mobilePositionStyles: Record<FloatingPanelPosition, string> = {
@@ -23,6 +24,7 @@ const mobilePositionStyles: Record<FloatingPanelPosition, string> = {
   'top-right': styles.mobileTopRight,
   'bottom-center': styles.mobileBottomCenter,
   'bottom-right': styles.mobileBottomRight,
+  'left-center': styles.leftCenter,
 };
 
 const FloatingPanel = ({

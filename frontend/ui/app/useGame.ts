@@ -11,20 +11,20 @@ export const GAME_MODES = [
     kind: "map",
     ...gameText.modes.capitalCities,
     type: QuestionType.CITIES,
-    display: { country: true, water: true },
+    display: { country: true },
   },
   {
     id: 2,
     kind: "map",
     ...gameText.modes.countriesAndRegions,
     type: QuestionType.COUNTRIES,
-    display: { city: true, water: true },
+    display: { city: true },
   },
   {
     id: 3,
     kind: "countryGuess",
     ...gameText.modes.guessCountry,
-    display: { water: true, hideOtherLabels: true },
+    display: {},
   },
 ] satisfies ({
   id: number;
@@ -38,11 +38,13 @@ export type GameMode = (typeof GAME_MODES)[number];
 export type GamePhase = "ready" | "selecting" | "started" | "paused" | "completed";
 
 export type QuestionResult = {
-  prompt: ReactNode;
-  submittedAnswer: ReactNode;
-  correctAnswer: ReactNode;
+  prompt: string;
+  submittedAnswer: string;
+  correctAnswer: string;
   isCorrect: boolean;
   pointsEarned: number;
+  quality: 'good' | 'medium' | 'bad';
+  distanceKm?: number;
 };
 
 export type GameData = {

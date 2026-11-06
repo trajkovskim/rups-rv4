@@ -83,14 +83,19 @@
   flex: 1 1 0;
 }
 
-.correctSegment,
-.correctDot {
-  background: #3264f5;
+.goodSegment,
+.goodDot {
+  background: #16845b;
 }
 
-.incorrectSegment,
-.incorrectDot {
-  background: #ed1684;
+.mediumSegment,
+.mediumDot {
+  background: #d99a19;
+}
+
+.badSegment,
+.badDot {
+  background: #d64b4b;
 }
 
 .emptySegment {
@@ -146,19 +151,23 @@
   min-width: 0;
   flex-direction: column;
   padding: 0.9rem;
-  border: 1px solid rgb(79 95 130 / 17%);
+  border: 1px solid rgb(30 40 55 / 12%);
   border-radius: 1rem;
   background: rgb(255 255 255 / 84%);
   text-align: left;
   text-shadow: none;
 }
 
-.questionCorrect {
-  border-bottom: 3px solid #3264f5;
+.questionGood {
+  border-bottom: 3px solid #16845b;
 }
 
-.questionIncorrect {
-  border-bottom: 3px solid #ed1684;
+.questionMedium {
+  border-bottom: 3px solid #d99a19;
+}
+
+.questionBad {
+  border-bottom: 3px solid #d64b4b;
 }
 
 .cardHeader {
@@ -171,26 +180,30 @@
 .questionNumber {
   padding: 0.3rem 0.5rem;
   border-radius: 0.4rem;
-  background: #e8efff;
-  color: #23449e;
+  background: #edf0f2;
+  color: #414953;
   font-size: 0.67rem;
   font-weight: 800;
 }
-
-.correctLabel,
-.incorrectLabel {
-  font-size: 0.62rem;
+.goodLabel,
+.mediumLabel,
+.badLabel {
+  font-size: 0.68rem;
   font-weight: 850;
-  letter-spacing: 0.1em;
+  letter-spacing: 0.04em;
   text-transform: uppercase;
 }
 
-.correctLabel {
-  color: #176b3a;
+.goodLabel {
+  color: #16845b;
 }
 
-.incorrectLabel {
-  color: #a5165c;
+.mediumLabel {
+  color: #a8750e;
+}
+
+.badLabel {
+  color: #c13d3d;
 }
 
 .prompt {
@@ -204,7 +217,7 @@
 .submittedAnswer,
 .correctAnswer {
   margin: 0.35rem 0 0;
-  color: #505663;
+  color: #16845b;
   font-size: 0.78rem;
   line-height: 1.4;
   overflow-wrap: anywhere;
@@ -213,6 +226,29 @@
 .correctAnswer {
   color: #176b3a;
   font-weight: 650;
+}
+
+.distance {
+  margin: 0.45rem 0 0;
+  font-size: 0.8rem;
+  font-weight: 700;
+  line-height: 1.4;
+}
+
+.distance strong {
+  font-weight: 850;
+}
+
+.distanceGood {
+  color: #16845b;
+}
+
+.distanceMedium {
+  color: #a8750e;
+}
+
+.distanceBad {
+  color: #c13d3d;
 }
 
 .cardScore {
@@ -226,14 +262,16 @@
   font-size: 0.68rem;
 }
 
-.cardScore strong {
-  color: #946200;
-  font-size: 1.35rem;
-  font-weight: 850;
+.questionGood .cardScore strong {
+  color: #16845b;
 }
 
-.questionCorrect .cardScore strong {
-  color: #176b3a;
+.questionMedium .cardScore strong {
+  color: #a8750e;
+}
+
+.questionBad .cardScore strong {
+  color: #c13d3d;
 }
 
 .cardProgress {
@@ -246,17 +284,21 @@
 
 .cardProgress span {
   display: block;
-  width: 100%;
+  width: 0;
   height: 100%;
+  transition: width 0.3s ease;
 }
 
-.cardProgressCorrect {
-  background: #00b86b;
+.cardProgressGood {
+  background: #16845b;
 }
 
-.cardProgressIncorrect {
-  width: 90% !important;
-  background: #ffad00;
+.cardProgressMedium {
+  background: #d99a19;
+}
+
+.cardProgressBad {
+  background: #d64b4b;
 }
 
 .actions {
